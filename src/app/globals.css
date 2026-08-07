@@ -290,6 +290,9 @@ button { color: inherit; }
 .record-button.processing { background: linear-gradient(145deg,#d56a35,#873417); }
 .record-button.complete { background: linear-gradient(145deg,#6fb27e,#356443); cursor: default; }
 .voice-spinner { animation: spin 1s linear infinite; }
+/* Stands in for the record button's spinner while voice input is disabled. */
+.smart-command-spinner { display: grid; place-items: center; margin: 6px 0 14px; color: var(--gold); }
+.calendar-view-switch { display: inline-flex; gap: 7px; }
 .voice-status {
   width: min(100%, 390px);
   margin: 0 auto 12px;
@@ -391,8 +394,45 @@ button { color: inherit; }
 
 @media(max-width:1050px){.overview-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.cards-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.landing-preview{grid-template-columns:1fr;padding:7vh 25px}.preview-dashboard{display:none}.landing-header,.landing-footer{padding:22px}.landing-status,.landing-footer span{display:none}.auth-dialog{padding:24px}.app-shell{display:block}.sidebar{position:fixed;left:0;right:0;bottom:0;top:auto;height:68px;padding:8px 12px;border-right:0;border-top:1px solid var(--line);flex-direction:row}.sidebar>.brand,.nav-label,.sidebar-bottom{display:none}.nav-list{width:100%;flex-direction:row;justify-content:space-around}.nav-item{flex-direction:column;gap:3px;padding:8px;font-size:8px}.nav-item.active::before{left:50%;top:-8px;width:24px;height:2px;transform:translateX(-50%)}.topbar{height:64px;padding:0 18px}.new-task-button span{display:none}.page-content{padding:23px 16px 90px}.calendar-page{height:calc(100svh - 64px);min-height:0;overflow:hidden}.calendar-layout{min-height:0}.page-heading{align-items:flex-start;flex-direction:column}.overview-grid,.bottom-grid,.side-stack,.cards-grid,.insights-grid,.settings-grid{grid-template-columns:1fr}.human-panel{min-height:480px}.human-selector{top:-43px;right:16px}.human-selector>span:first-child{display:none}.human-selector select{min-width:112px}.human-figure{inset:24px 16% 45px}.metric-badge{min-width:96px}.metric-health{left:2%}.metric-growth{right:2%}.metric-work{left:1%}.metric-relations{right:1%}.calendar-panel{padding:9px}.calendar-toolbar{align-items:flex-start;flex-direction:column}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.voice-fab{right:17px;bottom:82px}.settings-grid{grid-template-columns:1fr}}
-@media(max-width:760px){.calendar-page{padding-top:12px}.calendar-page>.page-heading{display:none}.calendar-page .calendar-tools{width:100%;flex-wrap:wrap}.calendar-panel .fc .fc-col-header-cell-cushion{padding:8px 2px;font-size:7px;letter-spacing:.02em}}
+@media(max-width:760px){
+  /* Give the grid every pixel the chrome does not need. The height subtracts
+     the 64px topbar and the 68px fixed bottom navigation, which the previous
+     rule ignored - the last hour of the day sat underneath the nav bar. */
+  .calendar-page{height:calc(100svh - 64px - 68px - env(safe-area-inset-bottom));padding:8px 8px 0}
+  .calendar-page>.page-heading{display:none}
+  .calendar-panel{padding:8px 6px 4px}
+  .calendar-toolbar{margin-bottom:9px;gap:8px}
+  .calendar-title{font-size:14px}
+  .calendar-page .calendar-tools{width:100%;flex-wrap:wrap;gap:6px}
+  .calendar-view-switch{display:flex;gap:6px;margin-left:auto}
+  .calendar-panel .fc .fc-col-header-cell-cushion{padding:9px 2px;font-size:10px;letter-spacing:.02em}
+  /* 52px per half-hour keeps a 30-minute drag comfortably above the ~44px
+     minimum touch target, and the day view has the width to afford it. */
+  .calendar-panel .fc .fc-timegrid-slot{height:52px}
+  .calendar-panel .fc .fc-timegrid-slot-label-cushion{font-size:11px}
+  .calendar-panel .fc{font-size:13px}
+  .calendar-panel .fc .fc-event{padding:3px 5px}
+  .calendar-panel .fc .fc-daygrid-day-number{font-size:12px}
+  /* The selection mirror is the only feedback that a drag registered. */
+  .calendar-panel .fc .fc-highlight{background:rgba(212,168,84,.26)}
+}
 @media(max-width:760px){.overview-focus-page{height:auto;min-height:calc(100svh - 64px);padding:12px 12px 86px}.human-panel-full{height:auto;min-height:0}.human-panel-full .human-stage{position:relative;inset:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;min-height:0;padding:440px 11px 15px}.human-panel-full .human-figure{top:56px;right:14%;bottom:auto;left:14%;height:345px}.human-panel-full .human-ring{top:205px;width:300px;height:300px}.human-selector{top:15px;right:15px}.metric-column{position:static;width:auto;min-width:0;justify-content:flex-start;gap:9px}.metric-column-left,.metric-column-right{right:auto;left:auto}.metric-badge{min-width:0;padding:11px 10px 10px}.metric-heading{grid-template-columns:6px minmax(0,1fr) auto;gap:6px}.metric-heading>span:not(.metric-dot){font-size:7px}.metric-heading strong{font-size:12px}.metric-connector{display:none}}
+
+/* Depth of the figure on phones.
+   perspective is an absolute distance, so the 900px used on desktop projects
+   an almost flat image onto the ~345px-tall mobile figure - the turn reads as
+   a slight wobble. Moving the vanishing point closer and widening the sweep
+   restores the sense of volume at the smaller size. */
+@media(max-width:760px){
+  .human-figure{perspective:460px;perspective-origin:50% 45%}
+  .human-figure-turn{animation-name:humanTurnMobile;animation-duration:9s}
+  .human-figure-image{filter:drop-shadow(0 0 9px rgba(244,240,231,.26)) drop-shadow(0 0 22px rgba(212,168,84,.12))}
+  .human-figure-echo{opacity:.075}
+}
+@keyframes humanTurnMobile{
+  0%,100%{transform:rotateY(-26deg) rotateX(2deg)}
+  50%{transform:rotateY(26deg) rotateX(-2deg)}
+}
 @media(max-width:520px){.voice-review-grid{grid-template-columns:1fr}.voice-review-grid label.full{grid-column:auto}}
 /* ----------------------------------------------------------------------
    Mobile type scale and touch ergonomics (<=760px).

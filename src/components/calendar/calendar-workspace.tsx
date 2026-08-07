@@ -10,7 +10,7 @@ import type { DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { CalendarPlus, ChevronLeft, ChevronRight, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import {
   VoiceTaskDialog,
@@ -61,6 +61,29 @@ type EventDraft = VoiceTaskDraft & {
 
 type VisibleRange = { start: Date; end: Date };
 
+type TimeGridView = "timeGridDay" | "timeGridWeek";
+
+const MOBILE_QUERY = "(max-width: 760px)";
+
+/**
+ * A seven-column week grid leaves roughly 45px per day on a phone, which is too
+ * narrow to read an event title or aim at a time slot. Mobile therefore opens
+ * on a single day and can be switched to the week manually.
+ */
+function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia(MOBILE_QUERY);
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    // The server has no viewport; the desktop week view is the safe default and
+    // the effect below corrects it on the client before paint.
+    () => false,
+  );
+}
+
 export function CalendarWorkspace({
   timeZone,
   initialCreate = false,
@@ -80,6 +103,10 @@ export function CalendarWorkspace({
   const [eventModal, setEventModal] = useState<EventDraft | null>(() => initialCreate ? defaultDraft(timeZone) : null);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  const [view, setView] = useState<TimeGridView>("timeGridWeek");
+  // Once the view is picked by hand, crossing the breakpoint must not undo it.
+  const viewPickedByUserRef = useRef(false);
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
@@ -133,6 +160,19 @@ export function CalendarWorkspace({
     const timer = window.setTimeout(() => setActionSuccess(""), 6_000);
     return () => window.clearTimeout(timer);
   }, [actionSuccess]);
+
+  useEffect(() => {
+    if (viewPickedByUserRef.current) return;
+    const responsiveView: TimeGridView = isMobile ? "timeGridDay" : "timeGridWeek";
+    setView(responsiveView);
+    calendarRef.current?.getApi().changeView(responsiveView);
+  }, [isMobile]);
+
+  function selectView(next: TimeGridView) {
+    viewPickedByUserRef.current = true;
+    setView(next);
+    calendarRef.current?.getApi().changeView(next);
+  }
 
   useEffect(() => {
     if (!visibleRange || feedSyncStartedRef.current) return;
@@ -322,9 +362,21 @@ export function CalendarWorkspace({
           <div className="calendar-toolbar">
             <div className="calendar-title">{viewTitle || "Календарь"}</div>
             <div className="calendar-tools">
-              <button className="small-button" onClick={() => api()?.prev()} aria-label="Предыдущая неделя"><ChevronLeft size={13} /></button>
+              <button className="small-button" onClick={() => api()?.prev()} aria-label="Назад"><ChevronLeft size={13} /></button>
               <button className="small-button" onClick={() => api()?.today()}>Сегодня</button>
-              <button className="small-button" onClick={() => api()?.next()} aria-label="Следующая неделя"><ChevronRight size={13} /></button>
+              <button className="small-button" onClick={() => api()?.next()} aria-label="Вперёд"><ChevronRight size={13} /></button>
+              <span className="calendar-view-switch" role="group" aria-label="Масштаб календаря">
+                <button
+                  className={`small-button ${view === "timeGridDay" ? "accent" : ""}`}
+                  onClick={() => selectView("timeGridDay")}
+                  aria-pressed={view === "timeGridDay"}
+                >День</button>
+                <button
+                  className={`small-button ${view === "timeGridWeek" ? "accent" : ""}`}
+                  onClick={() => selectView("timeGridWeek")}
+                  aria-pressed={view === "timeGridWeek"}
+                >Неделя</button>
+              </span>
               <button className="small-button accent" onClick={() => setEventModal(defaultDraft(timeZone))}><CalendarPlus size={12} /> Событие</button>
             </div>
           </div>
@@ -342,6 +394,10 @@ export function CalendarWorkspace({
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
               initialView="timeGridWeek"
+              // Taller rows give a comfortable drag target on touch; the day
+              // view has the width to spare, so it does not cost readability.
+              slotDuration="00:30:00"
+              snapDuration="00:15:00"
               initialDate={toFullCalendarInput(today, timeZone, true)}
               now={() => toFullCalendarInput(new Date(), timeZone, false)}
               timeZone={timeZone}
@@ -354,6 +410,13 @@ export function CalendarWorkspace({
               editable
               selectable
               selectMirror
+              // FullCalendar waits a full second before a touch turns into a
+              // drag (longPressDelay defaults to 1000ms), so on a phone a swipe
+              // across the grid scrolled the page instead of selecting a range.
+              longPressDelay={180}
+              selectLongPressDelay={180}
+              eventLongPressDelay={320}
+              selectMinDistance={2}
               firstDay={1}
               slotMinTime="06:00:00"
               slotMaxTime="23:00:00"

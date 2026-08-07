@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { prisma } from "@/lib/db";
 import { generateOpaqueToken, sha256, type RequestMetadata } from "@/lib/security";
@@ -95,9 +96,16 @@ export async function clearSessionCookie(): Promise<void> {
   });
 }
 
-export async function getSessionFromToken(
+/**
+ * Deduplicated per request and keyed by the token: the dashboard layout and the
+ * page beneath it each resolve the current user, which otherwise costs two
+ * identical session lookups on every render. Keying on the token (rather than
+ * caching getSession itself) keeps a freshly issued cookie from reading a stale
+ * pre-login entry.
+ */
+export const getSessionFromToken = cache(async (
   token: string | null | undefined,
-): Promise<AuthenticatedSession | null> {
+): Promise<AuthenticatedSession | null> => {
   if (!token) {
     return null;
   }
@@ -130,7 +138,7 @@ export async function getSessionFromToken(
     expiresAt: session.expiresAt,
     user: session.user,
   };
-}
+});
 
 export async function getSession(): Promise<AuthenticatedSession | null> {
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;

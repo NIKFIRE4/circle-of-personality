@@ -59,6 +59,15 @@ type TextInterpretationPayload = {
   error?: unknown;
 };
 
+/**
+ * Голосовой ввод выключен в продакшене: контейнер распознавания (GigaAM) на
+ * Vercel не поднимается — процесс падает при старте и порт не слушается
+ * (ECONNREFUSED). Текстовый ввод с разбором через ИИ работает и не зависит от
+ * этого сервиса. Весь код записи ниже сохранён: чтобы вернуть голос, достаточно
+ * поставить здесь true, когда контейнер починится.
+ */
+const VOICE_INPUT_ENABLED: boolean = false;
+
 const MIME_TYPES = [
   "audio/webm;codecs=opus",
   "audio/webm",
@@ -428,7 +437,9 @@ export function VoiceTaskDialog({
           ? "Проверьте текст, задачу и время перед сохранением."
           : phase === "saving"
             ? "Подтверждённая задача сохраняется в календаре."
-            : "Напишите задачу обычной фразой или нажмите на микрофон.";
+            : VOICE_INPUT_ENABLED
+              ? "Напишите задачу обычной фразой или нажмите на микрофон."
+              : "Напишите задачу обычной фразой — ИИ разберёт время и сферу.";
   const hint = recording
     ? `Говорите · осталось ${remainingSeconds} сек.`
     : phase === "idle"
@@ -440,7 +451,7 @@ export function VoiceTaskDialog({
       <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="voice-task-title" aria-busy={busy}>
         <div className="modal-head">
           <div>
-            <span className="eyebrow">Текст или голос</span>
+            <span className="eyebrow">{VOICE_INPUT_ENABLED ? "Текст или голос" : "Текстом"}</span>
             <h2 id="voice-task-title">Умная задача</h2>
           </div>
           <button type="button" className="modal-close" onClick={closeDialog} aria-label="Закрыть умный ввод">
@@ -467,26 +478,33 @@ export function VoiceTaskDialog({
               </div>
             </form>
           )}
-          {phase === "idle" && <div className="smart-command-divider"><span>или продиктуйте</span></div>}
-          <div className="record-orbit" data-phase={phase}>
-            <button
-              type="button"
-              className={`record-button ${recording ? "recording" : ""} ${busy ? "processing" : ""} ${phase === "review" ? "complete" : ""}`}
-              onClick={recording ? stopRecording : () => void startRecording()}
-              disabled={recorderDisabled}
-              aria-label={recording ? "Остановить запись" : phase === "review" ? "Запись распознана" : "Начать запись"}
-              aria-pressed={recording}
-              aria-busy={busy}
-            >
-              {busy
-                ? <LoaderCircle className="voice-spinner" size={25} />
-                : phase === "review"
-                  ? <Check size={27} />
-                  : recording
-                    ? <Square size={19} fill="currentColor" />
-                    : <Mic size={26} />}
-            </button>
-          </div>
+          {VOICE_INPUT_ENABLED && phase === "idle" && <div className="smart-command-divider"><span>или продиктуйте</span></div>}
+          {VOICE_INPUT_ENABLED && (
+            <div className="record-orbit" data-phase={phase}>
+              <button
+                type="button"
+                className={`record-button ${recording ? "recording" : ""} ${busy ? "processing" : ""} ${phase === "review" ? "complete" : ""}`}
+                onClick={recording ? stopRecording : () => void startRecording()}
+                disabled={recorderDisabled}
+                aria-label={recording ? "Остановить запись" : phase === "review" ? "Запись распознана" : "Начать запись"}
+                aria-pressed={recording}
+                aria-busy={busy}
+              >
+                {busy
+                  ? <LoaderCircle className="voice-spinner" size={25} />
+                  : phase === "review"
+                    ? <Check size={27} />
+                    : recording
+                      ? <Square size={19} fill="currentColor" />
+                      : <Mic size={26} />}
+              </button>
+            </div>
+          )}
+          {!VOICE_INPUT_ENABLED && busy && (
+            <div className="smart-command-spinner" aria-hidden="true">
+              <LoaderCircle className="voice-spinner" size={22} />
+            </div>
+          )}
           <div className="voice-status" data-phase={phase} role="status" aria-live="polite" aria-atomic="true">
             <i className="voice-status-dot" aria-hidden="true" />
             <div><strong>{statusTitle}</strong><span>{statusDetail}</span></div>
