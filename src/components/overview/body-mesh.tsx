@@ -10,13 +10,15 @@ import {
   type HumanoidVariant,
 } from "@/lib/humanoid-variant";
 
+// WebP at 768x1152: <Image> is unoptimized in production (see next.config.ts),
+// so these ship to the browser as-is and the source PNGs were ~3x heavier.
 const HUMANOID_ASSETS: Record<HumanoidVariant, string> = {
-  meditating: "/humanoids/humanoid-meditating.png",
-  standing: "/humanoids/humanoid-standing.png",
-  athlete: "/humanoids/humanoid-athlete.png",
-  coins: "/humanoids/humanoid-coins.png",
-  resting: "/humanoids/humanoid-resting.png",
-  creative: "/humanoids/humanoid-creative.png",
+  meditating: "/humanoids/humanoid-meditating.webp",
+  standing: "/humanoids/humanoid-standing.webp",
+  athlete: "/humanoids/humanoid-athlete.webp",
+  coins: "/humanoids/humanoid-coins.webp",
+  resting: "/humanoids/humanoid-resting.webp",
+  creative: "/humanoids/humanoid-creative.webp",
 };
 
 const HUMANOID_OPTIONS: Array<{
@@ -98,20 +100,20 @@ export function BodyMesh({
         <Image
           alt=""
           className="human-figure-echo"
-          height={1536}
+          height={1152}
           sizes="(max-width: 760px) 62vw, 360px"
           src={src}
-          width={1024}
+          width={768}
         />
         <div className="human-figure-turn" key={variant}>
           <Image
             alt=""
             className="human-figure-image"
-            height={1536}
+            height={1152}
             preload
             sizes="(max-width: 760px) 62vw, 360px"
             src={src}
-            width={1024}
+            width={768}
           />
         </div>
       </div>
