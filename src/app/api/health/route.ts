@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { jsonResponse } from "@/lib/api";
+import { taskAiConfigFromEnvironment } from "@/lib/task-interpreter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +12,12 @@ export async function GET(request: Request) {
   const startedAt = Date.now();
   // The speech container can be slow to wake, so it is only probed on demand
   // (/api/health?speech=1) and never as part of the default liveness check.
-  const probeSpeech = new URL(request.url).searchParams.get("speech") === "1";
+  const diagnostics = new URL(request.url).searchParams;
+  const probeSpeech = diagnostics.get("speech") === "1";
+  // Whether the AI parser is configured decides whether imported calendar
+  // events can be sorted into life areas at all: without it the classifier
+  // falls back to literal keyword matching, which rarely fits real titles.
+  const reportTaskAi = probeSpeech || diagnostics.get("ai") === "1";
 
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -21,6 +27,7 @@ export async function GET(request: Request) {
       checks: {
         database: "up",
         ...(probeSpeech ? { speech: await checkSpeechService() } : {}),
+        ...(reportTaskAi ? { taskAi: describeTaskAi() } : {}),
       },
       responseTimeMs: Date.now() - startedAt,
       timestamp: new Date().toISOString(),
@@ -47,6 +54,18 @@ type SpeechCheck = {
   detail?: string;
   responseTimeMs?: number;
 };
+
+/**
+ * Reports only whether an AI provider is configured and which model it points
+ * at. Never exposes the key or the endpoint.
+ */
+function describeTaskAi(): { configured: boolean; provider?: string; model?: string } {
+  const config = taskAiConfigFromEnvironment();
+
+  return config
+    ? { configured: true, provider: config.provider, model: config.model }
+    : { configured: false };
+}
 
 /**
  * Extracts the underlying socket error code (ENOTFOUND, ECONNREFUSED, ...)
