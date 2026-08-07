@@ -58,8 +58,15 @@ describe("calendar feed secret storage", () => {
   it("encrypts the URL with authenticated encryption", () => {
     const url = "https://calendar.google.com/calendar/ical/example/private/basic.ics";
     const encrypted = encryptCalendarFeedUrl(url);
-    const replacement = encrypted.endsWith("x") ? "y" : "x";
-    const tampered = `${encrypted.slice(0, -1)}${replacement}`;
+    const [version, encodedIv, encodedTag, encodedCiphertext] = encrypted.split(".");
+    const tamperedTag = Buffer.from(encodedTag, "base64url");
+    tamperedTag[0] ^= 1;
+    const tampered = [
+      version,
+      encodedIv,
+      tamperedTag.toString("base64url"),
+      encodedCiphertext,
+    ].join(".");
 
     expect(encrypted).not.toContain("calendar.google.com");
     expect(decryptCalendarFeedUrl(encrypted)).toBe(url);
