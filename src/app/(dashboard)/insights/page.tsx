@@ -1,9 +1,11 @@
 import { ArrowDownRight, ArrowUpRight, Clock3, Sparkles, Target } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { ProgressAnalysisPanel } from "@/components/insights/progress-analysis";
 import { TrendChart } from "@/components/insights/trend-chart";
 import { getCurrentUser } from "@/lib/auth";
 import { getDashboardData } from "@/lib/dashboard";
+import { analyzeProgress } from "@/lib/insights-analysis";
 
 export default async function InsightsPage() {
   const user = await getCurrentUser();
@@ -21,6 +23,12 @@ export default async function InsightsPage() {
     label: day.label,
     value: day.value,
   }));
+  const analysis = analyzeProgress({
+    change: dashboard.change,
+    completedMinutes: dashboard.completedMinutes,
+    metrics: dashboard.metrics,
+    weekDays: dashboard.weekDays,
+  });
 
   return (
     <main className="page-content">
@@ -56,6 +64,9 @@ export default async function InsightsPage() {
           </article>
         </div>
       </section>
+      <div style={{ marginTop: 16 }}>
+        <ProgressAnalysisPanel analysis={analysis} />
+      </div>
       <article className="panel" style={{ padding: 22, marginTop: 16, display: "flex", gap: 16, alignItems: "center" }}>
         <div className="streak-icon"><Sparkles size={20} /></div>
         <div>
