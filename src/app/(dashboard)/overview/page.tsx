@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BodyMesh } from "@/components/overview/body-mesh";
@@ -28,10 +29,29 @@ export default async function OverviewPage() {
           />
           <MetricColumn metrics={leftMetrics} side="left" />
           <MetricColumn metrics={rightMetrics} side="right" />
+          {dashboard.unassignedEvents > 0 && (
+            <Link className="overview-hint" href="/calendar">
+              {formatUnassigned(dashboard.unassignedEvents)} на этой неделе без
+              сферы — они не попадают в проценты. Откройте календарь, чтобы
+              распределить.
+            </Link>
+          )}
         </div>
       </section>
     </main>
   );
+}
+
+/**
+ * Imported events keep their own grammar: 1 событие, 2 события, 5 событий.
+ */
+function formatUnassigned(count: number): string {
+  const rules = new Intl.PluralRules("ru-RU");
+  const noun = { one: "событие", few: "события", many: "событий" }[
+    rules.select(count) as "one" | "few" | "many"
+  ] ?? "событий";
+
+  return `${count} ${noun}`;
 }
 
 function MetricColumn({

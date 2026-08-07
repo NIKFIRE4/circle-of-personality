@@ -389,7 +389,9 @@ export function CalendarWorkspace({
           {actionSuccess && <div className={`${styles.notice} ${styles.success}`} role="status">{actionSuccess}</div>}
           {loading && <div className={styles.notice}>Загружаем события выбранного периода…</div>}
           {!loading && !loadError && !events.length && <div className={`${styles.notice} ${styles.empty}`}>В этом периоде событий нет. Выберите время в календаре, чтобы добавить первое.</div>}
-          <div className={styles.calendarFrame}>
+          <div
+            className={`${styles.calendarFrame} ${view === "timeGridWeek" ? styles.dayScroll : ""}`}
+          >
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}

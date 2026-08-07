@@ -4,6 +4,10 @@ import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { z } from "zod";
 
 import {
+  DEFAULT_CATEGORY_KEYWORDS,
+  normalizeCategoryMatchText,
+} from "./default-categories";
+import {
   parseRussianVoiceCommand,
   type ParsedVoiceEvent,
 } from "./voice-command";
@@ -526,34 +530,57 @@ function zonedLocalDateTime(value: string, timeZone: string): Date {
   return date;
 }
 
+/**
+ * Offline fallback used whenever no AI provider answers.
+ *
+ * It used to return nothing unless exactly one sphere matched, so any title
+ * touching two spheres ("работа из дома") stayed uncategorised — and an
+ * uncategorised event is invisible in the overview. Scoring the spheres and
+ * taking the strongest match keeps the fallback decisive: a wrong sphere is
+ * one click to fix, an empty one silently reads as "the import did nothing".
+ */
 export function inferLocalCategoryId(
   text: string,
   categories: TaskCategoryOption[],
 ): string | undefined {
-  const normalized = text.toLocaleLowerCase("ru-RU").replace(/ё/g, "е");
+  const normalized = normalizeCategoryMatchText(text);
   const directMatches = categories.filter((category) => {
-    const name = category.name.toLocaleLowerCase("ru-RU").replace(/ё/g, "е");
+    const name = normalizeCategoryMatchText(category.name);
     return name.length >= 3 && normalized.includes(name);
   });
   if (directMatches.length === 1) return directMatches[0].id;
 
-  const keywords: Record<string, RegExp> = {
-    health: /трениров|спорт|зал|бег|йог|врач|здоров|зарядк/iu,
-    career: /работ|карьер|офис|проект|клиент|собеседован|стажиров|совещан/iu,
-    relationships: /семь|родител|друз|свидан|отношен|позвонить мам|позвонить пап/iu,
-    growth: /учеб|курс|урок|читать|книг|английск|развити|лекци/iu,
-    finance: /финанс|бюджет|банк|счет|налог|оплат|инвестиц/iu,
-    rest: /отдых|сон|спать|кино|сериал|танц|прогулк|отпуск/iu,
-    creativity: /рисова|музык|творче|фото|лепк|писать рассказ/iu,
-    environment: /дом|уборк|ремонт|покупк|переезд|окружен/iu,
-  };
-  const matches = categories.filter((category) => {
-    const key = category.slug?.toLocaleLowerCase("ru-RU")
-      || category.name.toLocaleLowerCase("ru-RU");
-    return Object.entries(keywords).some(([slug, pattern]) => key === slug && pattern.test(normalized));
-  });
+  let best: { id: string; hits: number; longest: number } | undefined;
 
-  return matches.length === 1 ? matches[0].id : undefined;
+  for (const category of categories) {
+    const slug = category.slug?.toLocaleLowerCase("ru-RU")
+      || normalizeCategoryMatchText(category.name);
+    const stems = DEFAULT_CATEGORY_KEYWORDS[slug];
+    if (!stems) continue;
+
+    let hits = 0;
+    let longest = 0;
+
+    for (const stem of stems) {
+      if (!normalized.includes(stem)) continue;
+      hits += 1;
+      longest = Math.max(longest, stem.length);
+    }
+
+    if (!hits) continue;
+
+    // More distinct stems wins; on a draw the more specific stem does. Category
+    // order (sortOrder) breaks a full tie, so the result stays deterministic.
+    if (
+      !best
+      || hits > best.hits
+      || (hits === best.hits && longest > best.longest)
+    ) {
+      best = { id: category.id, hits, longest };
+    }
+  }
+
+  return best?.id;
 }
 
 type GigaChatTokenCache = {

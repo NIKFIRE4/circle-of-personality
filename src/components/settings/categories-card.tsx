@@ -4,7 +4,19 @@ import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import {
+  BALANCE_MODEL_SOURCES,
+  DEFAULT_BALANCE_CATEGORIES,
+  DEFAULT_CATEGORY_GUIDES,
+  defaultCategoryGuide,
+  OMITTED_SPHERE_NOTE,
+} from "@/lib/default-categories";
+
 import styles from "./categories-card.module.css";
+
+const DEFAULT_CATEGORY_NAMES = new Map<string, string>(
+  DEFAULT_BALANCE_CATEGORIES.map((category) => [category.slug, category.name]),
+);
 
 export type Category = {
   id: string;
@@ -94,11 +106,15 @@ export function CategoriesCard({
         {error ? <div className={`${styles.message} ${styles.error}`} role="alert">{error}</div> : null}
         {!loading && !categories.length ? <div className={styles.message}>Активных сфер пока нет.</div> : null}
         <div className={styles.list}>
-          {categories.map((category) => (
+          {categories.map((category) => {
+            const guide = defaultCategoryGuide(category.slug);
+
+            return (
             <div className={styles.row} key={category.id}>
               <i className={styles.dot} style={{ background: category.color }} />
               <div className={styles.copy}>
                 <strong>{category.name}</strong>
+                {guide ? <span className={styles.summary}>{guide.summary}</span> : null}
                 <span>{formatWeeklyTarget(category.targetMinutesPerWeek)}</span>
               </div>
               <div className={styles.actions}>
@@ -106,11 +122,53 @@ export function CategoriesCard({
                 <button className={`${styles.iconButton} ${styles.danger}`} onClick={() => void archiveCategory(category)} aria-label={`Удалить сферу ${category.name} из обзора`}><Trash2 size={13} /></button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
+        <BalanceModelExplainer />
       </article>
       {editing && <CategoryDialog category={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSave={saveCategory} />}
     </>
+  );
+}
+
+/**
+ * The eight starting spheres used to appear without explanation, which made
+ * them read as arbitrary. This states where each one comes from and why its
+ * weekly target is what it is, so the defaults can be argued with.
+ */
+function BalanceModelExplainer() {
+  return (
+    <details className={styles.rationale}>
+      <summary>Откуда эти восемь сфер</summary>
+      <p>
+        Набор по умолчанию не придуман здесь: это пересечение трёх опубликованных
+        моделей благополучия, которые независимо сходятся на одних и тех же
+        областях жизни. Любую сферу можно переименовать, изменить её цель или
+        убрать из обзора.
+      </p>
+      <ul className={styles.rationaleList}>
+        {DEFAULT_CATEGORY_GUIDES.map((guide) => (
+          <li key={guide.slug}>
+            <strong>{DEFAULT_CATEGORY_NAMES.get(guide.slug) ?? guide.slug}</strong>
+            <span>Основание: {guide.basis}</span>
+            <span>Недельная цель: {guide.target}</span>
+            <span>Сюда попадают: {guide.includes.join(", ")}.</span>
+          </li>
+        ))}
+      </ul>
+      <p>{OMITTED_SPHERE_NOTE}</p>
+      <ul className={styles.sourceList}>
+        {BALANCE_MODEL_SOURCES.map((source) => (
+          <li key={source.url}>
+            <a href={source.url} target="_blank" rel="noreferrer noopener">
+              {source.title}
+            </a>
+            <span>{source.detail}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

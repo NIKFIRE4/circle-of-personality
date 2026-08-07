@@ -51,6 +51,76 @@
   font-size: 9px;
 }
 
+/* The sphere name stays clipped to one line; its explanation may wrap. */
+.copy .summary {
+  color: #8d8981;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.rationale {
+  margin-top: 16px;
+  border-top: 1px solid #272521;
+  padding-top: 13px;
+}
+
+.rationale summary {
+  color: #8d8981;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rationale summary:hover {
+  color: #eee9df;
+}
+
+.rationale p {
+  margin-top: 11px;
+  color: #77736d;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.rationaleList,
+.sourceList {
+  display: grid;
+  gap: 10px;
+  margin-top: 11px;
+  list-style: none;
+}
+
+.rationaleList li,
+.sourceList li {
+  display: grid;
+  gap: 3px;
+  border-left: 1px solid #302e29;
+  padding-left: 10px;
+}
+
+.rationaleList strong,
+.sourceList a {
+  color: #c9c4ba;
+  font-size: 10px;
+}
+
+.sourceList a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sourceList a:hover {
+  color: #eee9df;
+}
+
+.rationaleList span,
+.sourceList span {
+  color: #68655f;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
 .actions {
   display: flex;
   gap: 5px;

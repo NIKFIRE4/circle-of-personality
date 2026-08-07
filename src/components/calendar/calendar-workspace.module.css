@@ -32,6 +32,22 @@
 .calendarFrame {
   flex: 1;
   min-height: 0;
+  /* FullCalendar keeps its own vertical scroller inside, so only the day
+     columns scroll sideways here. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
+/*
+ * Seven day columns squeezed into a phone leave each one too narrow to read a
+ * title or to aim at when dragging. FullCalendar's own dayMinWidth needs the
+ * premium ScrollGrid plugin, so the week keeps a floor width and the frame
+ * scrolls instead of compressing. Below the floor nothing overflows and no
+ * scrollbar appears, so wide screens are untouched.
+ */
+.dayScroll > :global(.fc) {
+  min-width: 660px;
 }
 
 .sourceNote {

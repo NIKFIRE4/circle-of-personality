@@ -9,6 +9,7 @@ import {
   buildMetrics,
   calculateDayProgress,
   calculateStreakDays,
+  countUnassignedEvents,
   summarizeConfiguredMetrics,
   type DashboardMathEvent,
 } from "@/lib/dashboard-math";
@@ -124,6 +125,7 @@ export async function getDashboardDataAt(
     change: total - previousTotal,
     completedMinutes: currentSummary.completedMinutes,
     targetMinutes: currentSummary.targetMinutes,
+    unassignedEvents: countUnassignedEvents(typedEvents, weekStart, weekEnd),
     todayEvents: todayEvents.map((event) => ({
       id: event.id,
       title: event.title,

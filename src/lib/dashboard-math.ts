@@ -69,6 +69,29 @@ export function buildMetrics(
   });
 }
 
+/**
+ * Events inside the range that no sphere counts, and therefore that no
+ * percentage on the overview reflects.
+ *
+ * An import that lands events without a category moves nothing on screen, which
+ * is indistinguishable from an import that failed. Counting them lets the
+ * overview say so instead of showing eight silent zeroes.
+ */
+export function countUnassignedEvents(
+  events: DashboardMathEvent[],
+  rangeStart: Date,
+  rangeEnd: Date,
+): number {
+  return events.filter(
+    (event) =>
+      !event.allDay &&
+      !event.categoryId &&
+      event.status !== "CANCELLED" &&
+      event.startAt < rangeEnd &&
+      event.endAt > rangeStart,
+  ).length;
+}
+
 export function averageProgress(metrics: BalanceMetric[]): number {
   const configured = metrics.filter((metric) => metric.targetMinutes > 0);
 

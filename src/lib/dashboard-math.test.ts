@@ -6,6 +6,7 @@ import {
   buildMetrics,
   calculateDayProgress,
   calculateStreakDays,
+  countUnassignedEvents,
   overlapMinutes,
   summarizeConfiguredMetrics,
   type DashboardMathEvent,
@@ -244,5 +245,43 @@ describe("dashboard streak math", () => {
     );
 
     expect(streak).toBe(MAX_STREAK_DAYS);
+  });
+});
+
+describe("countUnassignedEvents", () => {
+  const rangeStart = new Date("2026-08-03T00:00:00.000Z");
+  const rangeEnd = new Date("2026-08-10T00:00:00.000Z");
+
+  it("counts events in range that no sphere can score", () => {
+    const events = [
+      event("2026-08-04T09:00:00.000Z", "2026-08-04T10:00:00.000Z", {
+        categoryId: null,
+      }),
+      event("2026-08-05T09:00:00.000Z", "2026-08-05T10:00:00.000Z", {
+        categoryId: null,
+        status: "PLANNED",
+      }),
+      event("2026-08-06T09:00:00.000Z", "2026-08-06T10:00:00.000Z"),
+    ];
+
+    expect(countUnassignedEvents(events, rangeStart, rangeEnd)).toBe(2);
+  });
+
+  it("ignores cancelled, all-day and out-of-range events", () => {
+    const events = [
+      event("2026-08-04T09:00:00.000Z", "2026-08-04T10:00:00.000Z", {
+        categoryId: null,
+        status: "CANCELLED",
+      }),
+      event("2026-08-04T00:00:00.000Z", "2026-08-05T00:00:00.000Z", {
+        categoryId: null,
+        allDay: true,
+      }),
+      event("2026-08-11T09:00:00.000Z", "2026-08-11T10:00:00.000Z", {
+        categoryId: null,
+      }),
+    ];
+
+    expect(countUnassignedEvents(events, rangeStart, rangeEnd)).toBe(0);
   });
 });

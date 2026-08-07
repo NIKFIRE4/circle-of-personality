@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  inferLocalCategoryId,
   interpretTaskCommand,
   taskAiConfigFromEnvironment,
   type TaskAiConfig,
@@ -430,5 +431,45 @@ describe("taskAiConfigFromEnvironment", () => {
       model: "qwen3.5:4b",
       timeoutMs: 20_000,
     });
+  });
+});
+
+describe("inferLocalCategoryId", () => {
+  const spheres = [
+    { id: "health-id", name: "Здоровье", slug: "health" },
+    { id: "career-id", name: "Карьера", slug: "career" },
+    { id: "relationships-id", name: "Отношения", slug: "relationships" },
+    { id: "growth-id", name: "Развитие", slug: "growth" },
+    { id: "rest-id", name: "Отдых", slug: "rest" },
+    { id: "environment-id", name: "Окружение", slug: "environment" },
+  ];
+
+  it("matches everyday calendar titles without an AI provider", () => {
+    expect(inferLocalCategoryId("Стоматолог", spheres)).toBe("health-id");
+    expect(inferLocalCategoryId("Созвон с заказчиком", spheres)).toBe("career-id");
+    expect(inferLocalCategoryId("День рождения Маши", spheres)).toBe("relationships-id");
+    expect(inferLocalCategoryId("Урок английского", spheres)).toBe("growth-id");
+    expect(inferLocalCategoryId("Продукты в магазине", spheres)).toBe("environment-id");
+  });
+
+  it("picks the strongest sphere instead of giving up on a tie", () => {
+    // "работа" and "дома" pull in different directions; the title carries two
+    // career stems, so the event lands somewhere instead of nowhere.
+    expect(inferLocalCategoryId("Работа над проектом дома", spheres)).toBe("career-id");
+  });
+
+  it("prefers a literal sphere name over keywords", () => {
+    expect(inferLocalCategoryId("Планирую отдых", spheres)).toBe("rest-id");
+  });
+
+  it("still returns nothing when no sphere is implied", () => {
+    expect(inferLocalCategoryId("Ыфваы", spheres)).toBeUndefined();
+  });
+
+  it("leaves user-created spheres to the literal name match", () => {
+    const custom = [{ id: "pets-id", name: "Питомцы", slug: "pitomcy" }];
+
+    expect(inferLocalCategoryId("Питомцы: ветеринар", custom)).toBe("pets-id");
+    expect(inferLocalCategoryId("Ветеринар", custom)).toBeUndefined();
   });
 });
