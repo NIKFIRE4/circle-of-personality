@@ -14,6 +14,9 @@ import { interpretTaskCommand } from "@/lib/task-interpreter";
 import { VoiceCommandParseError } from "@/lib/voice-command";
 
 export const runtime = "nodejs";
+// The AI parser is allowed up to 30s (TASK_AI_TIMEOUT_MS), which exceeds the
+// platform's default function timeout. Declare the ceiling explicitly.
+export const maxDuration = 60;
 
 const taskCommandSchema = z.object({
   text: z.string().trim().min(1).max(1_000),

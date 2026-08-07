@@ -8,7 +8,14 @@ import {
 } from "@/lib/voice-command";
 
 export const runtime = "nodejs";
+// Without this the platform applies its own (much lower) default and kills the
+// function mid-request, so none of the error handling below ever runs and the
+// browser only sees a raw gateway error. 60s is the Hobby-plan ceiling.
+export const maxDuration = 60;
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+// Speech and the AI parser run back to back, so their timeouts have to fit
+// inside maxDuration together with request overhead: 30 + 20 + slack < 60.
+const SPEECH_TIMEOUT_MS = 30_000;
 
 export async function POST(request: Request) {
   let commandId: string | undefined;
@@ -43,10 +50,10 @@ export async function POST(request: Request) {
       const endpoint = `${(process.env.SPEECH_SERVICE_URL || "http://127.0.0.1:8001").replace(/\/$/, "")}/transcribe`;
       let upstream: Response;
       try {
-        upstream = await fetch(endpoint, { method: "POST", body: upstreamBody, signal: AbortSignal.timeout(45_000) });
+        upstream = await fetch(endpoint, { method: "POST", body: upstreamBody, signal: AbortSignal.timeout(SPEECH_TIMEOUT_MS) });
       } catch (error) {
         if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
-          throw new ApiError(504, "SPEECH_TIMEOUT", "Распознавание заняло слишком много времени. Попробуйте более короткую запись.");
+          throw new ApiError(504, "SPEECH_TIMEOUT", "Сервис распознавания ещё запускается после простоя. Подождите полминуты и повторите команду.");
         }
         throw new ApiError(503, "SPEECH_UNAVAILABLE", "Голосовой ввод временно недоступен. Попробуйте позже или создайте задачу вручную.");
       }
