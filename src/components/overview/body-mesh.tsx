@@ -21,17 +21,22 @@ const HUMANOID_ASSETS: Record<HumanoidVariant, string> = {
   creative: "/humanoids/humanoid-creative.webp",
 };
 
+/**
+ * Archetypes, not life areas. These deliberately do not mirror the category
+ * names in default-categories.ts: the figure is who the person is being this
+ * week, while a category is where the hours went.
+ */
 const HUMANOID_OPTIONS: Array<{
   label: string;
   value: HumanoidSelection;
 }> = [
   { label: "Авто", value: "auto" },
-  { label: "Медитация", value: "meditating" },
-  { label: "Нейтральный", value: "standing" },
-  { label: "Спортсмен", value: "athlete" },
-  { label: "Финансы", value: "coins" },
-  { label: "Отдых", value: "resting" },
-  { label: "Творчество", value: "creative" },
+  { label: "Мастер дзена", value: "meditating" },
+  { label: "Искатель баланса", value: "standing" },
+  { label: "Неутомимый атлет", value: "athlete" },
+  { label: "Гений финансов", value: "coins" },
+  { label: "Хранитель покоя", value: "resting" },
+  { label: "Творческий гений", value: "creative" },
 ];
 
 export function BodyMesh({
