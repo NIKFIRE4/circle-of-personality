@@ -204,7 +204,8 @@ export function CalendarFeedCard() {
           <p>
             Подключите календарь по ссылке iCal/ICS — без входа, ключей и сложной
             настройки. События импортируются только для чтения, а ИИ распределяет
-            задачи текущего месяца по вашим сферам жизни.
+            по вашим сферам жизни задачи за последние 30 дней и ближайшие две
+            недели.
           </p>
         </div>
         {!loading && (
@@ -553,10 +554,35 @@ function syncSummary(sync: SyncResult, initial: boolean) {
   ].filter(Boolean);
 
   if (parts.length === 0) {
-    return prefix;
+    return `${prefix}${classificationNote(sync)}`;
   }
 
-  return `${prefix} ${capitalize(parts.join(", "))}.`;
+  return `${prefix} ${capitalize(parts.join(", "))}.${classificationNote(sync)}`;
+}
+
+/**
+ * The classifier falls back to keyword matching whenever the AI provider fails,
+ * which used to be invisible: events simply stayed without a life area and the
+ * overview percentages did not move, with nothing explaining why.
+ */
+function classificationNote(sync: SyncResult) {
+  if (sync.analyzed === 0) return "";
+
+  if (sync.classificationMode === "local") {
+    return sync.categorized > 0
+      ? " ИИ был недоступен — сферы подобраны по ключевым словам, проверьте их."
+      : " ИИ был недоступен, а по ключевым словам сферы подобрать не удалось: события остались без сферы и в проценты обзора не попадут.";
+  }
+
+  if (sync.classificationMode === "mixed") {
+    return " Часть событий ИИ разобрать не смог — для них сферы подобраны по ключевым словам.";
+  }
+
+  if (sync.classificationMode === "ai" && sync.categorized === 0) {
+    return " ИИ не нашёл подходящих сфер для этих событий.";
+  }
+
+  return "";
 }
 
 function capitalize(value: string) {

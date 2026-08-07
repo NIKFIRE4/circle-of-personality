@@ -1,4 +1,5 @@
-import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import { addDays } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { z } from "zod";
 
 import { prisma } from "./db";
@@ -14,6 +15,8 @@ import {
 
 const AI_BATCH_SIZE = 50;
 const AI_MAX_TOKENS = 4_000;
+const CLASSIFICATION_LOOKBACK_DAYS = 30;
+const CLASSIFICATION_LOOKAHEAD_DAYS = 14;
 
 export type CalendarEventClassificationMode =
   | "ai"
@@ -81,9 +84,9 @@ const AI_CLASSIFICATION_JSON_SCHEMA = {
 } as const;
 
 /**
- * Classifies uncategorized imported events that overlap the user's current
- * calendar month. Existing category choices are protected by the update
- * predicate and are never overwritten.
+ * Classifies uncategorized imported events inside the rolling window returned
+ * by calendarClassificationUtcRange. Existing category choices are protected by
+ * the update predicate and are never overwritten.
  */
 export async function classifyImportedCalendarMonth(input: {
   connectionId: string;
@@ -92,7 +95,10 @@ export async function classifyImportedCalendarMonth(input: {
   userId: string;
   userTimeZone: string;
 }): Promise<CalendarEventClassificationSummary> {
-  const range = calendarMonthUtcRange(input.now ?? new Date(), input.userTimeZone);
+  const range = calendarClassificationUtcRange(
+    input.now ?? new Date(),
+    input.userTimeZone,
+  );
   const [categories, events] = await Promise.all([
     prisma.balanceCategory.findMany({
       where: { isArchived: false, userId: input.userId },
@@ -155,8 +161,8 @@ export async function classifyImportedCalendarMonth(input: {
         metadata: {
           analyzed: classified.analyzed,
           categorized,
-          monthEnd: range.end.toISOString(),
-          monthStart: range.start.toISOString(),
+          windowEnd: range.end.toISOString(),
+          windowStart: range.start.toISOString(),
           mode: classified.mode,
         },
         userAgent: input.metadata?.userAgent,
@@ -245,19 +251,33 @@ export async function classifyCalendarEventCandidates({
   };
 }
 
-export function calendarMonthUtcRange(
+/**
+ * Rolling window the classifier works over, aligned to the user's local days.
+ *
+ * A calendar month was previously used, which meant that on the 1st only a few
+ * hours of history were ever analysed, and events from the day before were
+ * never sorted at all. Thirty days back keeps recent history covered on every
+ * day of the month.
+ *
+ * The window also reaches forward: the overview scores the current week, which
+ * runs up to six days into the future, so classifying only the past would leave
+ * planned events without a life area and absent from the percentages.
+ */
+export function calendarClassificationUtcRange(
   now: Date,
   timeZone: string,
 ): { end: Date; start: Date } {
-  const localMonth = formatInTimeZone(now, timeZone, "yyyy-MM");
-  const [year, month] = localMonth.split("-").map(Number);
-  const nextYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
+  const localDayStart = toZonedTime(now, timeZone);
+  localDayStart.setHours(0, 0, 0, 0);
 
   return {
-    start: fromZonedTime(`${localMonth}-01T00:00:00`, timeZone),
+    start: fromZonedTime(
+      addDays(localDayStart, -CLASSIFICATION_LOOKBACK_DAYS),
+      timeZone,
+    ),
+    // Exclusive upper bound.
     end: fromZonedTime(
-      `${nextYear}-${String(nextMonth).padStart(2, "0")}-01T00:00:00`,
+      addDays(localDayStart, CLASSIFICATION_LOOKAHEAD_DAYS + 1),
       timeZone,
     ),
   };

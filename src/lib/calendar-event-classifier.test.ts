@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  calendarMonthUtcRange,
+  calendarClassificationUtcRange,
   classifyCalendarEventCandidates,
   type CalendarEventClassificationCandidate,
 } from "./calendar-event-classifier";
@@ -90,14 +90,25 @@ describe("classifyCalendarEventCandidates", () => {
   });
 });
 
-describe("calendarMonthUtcRange", () => {
-  it("builds timezone-aware current-month boundaries", () => {
-    expect(calendarMonthUtcRange(
+describe("calendarClassificationUtcRange", () => {
+  it("spans 30 days back and 14 forward from the local day", () => {
+    // 22:30 UTC on 31 Aug is already 01:30 on 1 Sep in Moscow (UTC+3), so the
+    // window is anchored to 1 Sep local midnight = 31 Aug 21:00 UTC.
+    expect(calendarClassificationUtcRange(
       new Date("2026-08-31T22:30:00.000Z"),
       "Europe/Moscow",
     )).toEqual({
-      start: new Date("2026-08-31T21:00:00.000Z"),
-      end: new Date("2026-09-30T21:00:00.000Z"),
+      start: new Date("2026-08-01T21:00:00.000Z"),
+      end: new Date("2026-09-15T21:00:00.000Z"),
     });
+  });
+
+  it("covers the day before, which a calendar month boundary would miss", () => {
+    const firstOfMonth = new Date("2026-09-01T09:00:00.000Z");
+    const range = calendarClassificationUtcRange(firstOfMonth, "Europe/Moscow");
+    const yesterday = new Date("2026-08-31T10:00:00.000Z");
+
+    expect(range.start.getTime()).toBeLessThan(yesterday.getTime());
+    expect(range.end.getTime()).toBeGreaterThan(firstOfMonth.getTime());
   });
 });

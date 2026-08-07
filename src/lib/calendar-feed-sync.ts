@@ -12,7 +12,7 @@ import {
   parseCalendarFeed,
 } from "@/lib/calendar-feed";
 import {
-  calendarMonthUtcRange,
+  calendarClassificationUtcRange,
   safelyClassifyImportedCalendarMonth,
   type CalendarEventClassificationMode,
 } from "@/lib/calendar-event-classifier";
@@ -606,7 +606,7 @@ async function withCalendarClassification(
 ): Promise<CalendarFeedSyncResult> {
   if (result.unchanged) {
     try {
-      if (await currentMonthClassificationIsFresh(input, result.connectionId)) {
+      if (await recentClassificationIsFresh(input, result.connectionId)) {
         return {
           ...result,
           analyzed: 0,
@@ -636,11 +636,11 @@ async function withCalendarClassification(
   };
 }
 
-async function currentMonthClassificationIsFresh(
+async function recentClassificationIsFresh(
   input: { userId: string; userTimeZone: string },
   connectionId: string,
 ): Promise<boolean> {
-  const range = calendarMonthUtcRange(new Date(), input.userTimeZone);
+  const range = calendarClassificationUtcRange(new Date(), input.userTimeZone);
   const [classification, latestCategory] = await Promise.all([
     prisma.auditLog.findFirst({
       where: {
