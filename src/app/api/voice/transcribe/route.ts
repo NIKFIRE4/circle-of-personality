@@ -8,14 +8,12 @@ import {
 } from "@/lib/voice-command";
 
 export const runtime = "nodejs";
-// Without this the platform applies its own (much lower) default and kills the
-// function mid-request, so none of the error handling below ever runs and the
-// browser only sees a raw gateway error. 60s is the Hobby-plan ceiling.
-export const maxDuration = 60;
+// The speech container scales to zero and has to load a 428 MB checkpoint on
+// the first request after idling, so the budget has to cover a cold start.
+// Speech and the AI parser run back to back: 90 + 20 + overhead < 120.
+export const maxDuration = 120;
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
-// Speech and the AI parser run back to back, so their timeouts have to fit
-// inside maxDuration together with request overhead: 30 + 20 + slack < 60.
-const SPEECH_TIMEOUT_MS = 30_000;
+const SPEECH_TIMEOUT_MS = 90_000;
 
 export async function POST(request: Request) {
   let commandId: string | undefined;

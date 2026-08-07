@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import "./globals.css";
 
@@ -15,6 +15,16 @@ const unbounded = Unbounded({
 export const metadata: Metadata = {
   title: "КОНТУР.КОСТРОВ — персональная система баланса",
   description: "Планируйте важное, замечайте прогресс и сохраняйте баланс.",
+};
+
+export const viewport: Viewport = {
+  // viewport-fit=cover is what makes env(safe-area-inset-*) resolve to real
+  // values, so the fixed bottom navigation can clear the iPhone home
+  // indicator instead of sitting underneath it.
+  viewportFit: "cover",
+  // Matches --ink so the mobile browser chrome blends into the page.
+  themeColor: "#080807",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
