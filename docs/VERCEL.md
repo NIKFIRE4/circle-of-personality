@@ -1,6 +1,11 @@
 # Развёртывание на Vercel
 
-Next.js-приложение разворачивается на Vercel напрямую из GitHub. Корневой `Dockerfile` предназначен для самостоятельного хостинга и локального production-запуска; Vercel его не использует.
+Приложение разворачивается из GitHub как Vercel Services-проект из двух частей:
+
+- `frontend` — Next.js из корня репозитория;
+- `speech` — приватный OCI-контейнер из `services/speech/Dockerfile.vercel` с FFmpeg, PyTorch и GigaAM.
+
+Binding в `vercel.json` автоматически передаёт frontend внутренний URL контейнера в `SPEECH_SERVICE_URL`. Speech endpoint не выставляется в интернет отдельным rewrite. Корневой `Dockerfile` остаётся для самостоятельного хостинга и локального production-запуска.
 
 ## 1. Создать PostgreSQL
 
@@ -10,8 +15,9 @@ Next.js-приложение разворачивается на Vercel напр
 
 1. Откройте [Vercel Projects](https://vercel.com/nikfire4s-projects).
 2. Нажмите **Add New → Project** и импортируйте публичный репозиторий.
-3. Оставьте **Framework Preset: Next.js**, **Root Directory: `.`** и стандартные команды установки/сборки.
-4. До первого production-деплоя добавьте переменные окружения.
+3. Выберите **Application Preset: Services**. Оставьте **Root Directory: `.`** и стандартные команды установки/сборки.
+4. Проверьте, что Vercel прочитал `vercel.json` и показывает сервисы `frontend` и `speech`.
+5. До первого production-деплоя добавьте переменные окружения.
 
 ## 3. Настроить переменные
 
@@ -29,9 +35,11 @@ Next.js-приложение разворачивается на Vercel напр
 ```dotenv
 SESSION_TTL_SECONDS=2592000
 BCRYPT_ROUNDS=12
-VOICE_DEMO_MODE=true
+VOICE_DEMO_MODE=false
 TASK_AI_TIMEOUT_MS=20000
 ```
+
+`SPEECH_SERVICE_URL` вручную добавлять не нужно: Vercel создаёт его из service binding отдельно для каждого Production/Preview deployment. Для принудительной интерфейсной демонстрации без распознавания можно временно установить `VOICE_DEMO_MODE=true`.
 
 Для ИИ-разбора добавьте только один профиль из `.env.example`, например `OPENROUTER_API_KEY`. Для legacy Google OAuth дополнительно понадобятся `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` и `GOOGLE_TOKEN_ENCRYPTION_KEY`; обычный read-only импорт iCal/ICS работает без OAuth.
 
@@ -64,6 +72,8 @@ Workflow запускает только `prisma migrate deploy` и никогд
 
 Если менялся `APP_URL` или любой secret, выполните Redeploy: старые deployment не получают новые значения автоматически.
 
-## Ограничение голосового ввода
+## Голосовой ввод на Vercel
 
-Контейнер `services/speech` с PyTorch, FFmpeg и GigaAM не запускается вместе с Next.js-проектом на Vercel. Для первой демонстрации оставьте `VOICE_DEMO_MODE=true`. Для настоящего распознавания разверните speech-сервис отдельно в приватной сети и задайте его HTTPS-адрес в `SPEECH_SERVICE_URL`. У Vercel Functions также есть лимит размера тела запроса, поэтому аудио должно оставаться коротким.
+GigaAM checkpoint и tokenizer загружаются во время сборки `speech` и входят в immutable container image. Поэтому холодный runtime не скачивает модель заново. Контейнер слушает предоставленный Vercel порт, работает на CPU одним Uvicorn worker и принимает запросы только через приватный binding от frontend.
+
+Это тяжёлая функция: PyTorch и GigaAM требуют заметного времени сборки, до 2 ГБ памяти Hobby и расходуют Fluid Compute при загрузке модели и распознавании. После простоя production-контейнер может масштабироваться до нуля, поэтому первая голосовая команда после холодного старта будет медленнее. Запись в интерфейсе ограничена 20 секундами и обычно укладывается в лимит тела запроса Vercel.
