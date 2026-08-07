@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-life_balance}
+      POSTGRES_USER: ${POSTGRES_USER:-balance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-balance_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - life_balance_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  speech:
+    profiles: ["speech"]
+    build:
+      context: ./services/speech
+    restart: unless-stopped
+    ports:
+      - "${SPEECH_PORT:-8001}:8000"
+    environment:
+      SPEECH_DEVICE: ${SPEECH_DEVICE:-auto}
+      SPEECH_MAX_DURATION_SECONDS: 24
+      SPEECH_MAX_UPLOAD_BYTES: 20971520
+    volumes:
+      - gigaam_model_cache:/models
+
+  migrate:
+    build:
+      context: .
+      target: migrate
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-balance}:${POSTGRES_PASSWORD:-balance_dev_password}@postgres:5432/${POSTGRES_DB:-life_balance}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-balance}:${POSTGRES_PASSWORD:-balance_dev_password}@postgres:5432/${POSTGRES_DB:-life_balance}?schema=public
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-2592000}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      AUDIT_HASH_SECRET: ${AUDIT_HASH_SECRET:-docker-local-audit-secret-change-me}
+      CALENDAR_FEED_ENCRYPTION_KEY: ${CALENDAR_FEED_ENCRYPTION_KEY:-}
+      GOOGLE_TOKEN_ENCRYPTION_KEY: ${GOOGLE_TOKEN_ENCRYPTION_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3000/api/integrations/google/callback}
+      SPEECH_SERVICE_URL: http://speech:8000
+      VOICE_DEMO_MODE: ${VOICE_DEMO_MODE:-true}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GIGACHAT_CREDENTIALS: ${GIGACHAT_CREDENTIALS:-}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+      CLOUDFLARE_AI_API_TOKEN: ${CLOUDFLARE_AI_API_TOKEN:-}
+      TASK_AI_API_KEY: ${TASK_AI_API_KEY:-}
+      TASK_AI_BASE_URL: ${TASK_AI_BASE_URL:-}
+      TASK_AI_MODEL: ${TASK_AI_MODEL:-}
+      TASK_AI_TIMEOUT_MS: ${TASK_AI_TIMEOUT_MS:-20000}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  life_balance_postgres_data:
+  gigaam_model_cache:

@@ -1,0 +1,344 @@
+.card {
+  display: grid;
+  gap: 16px;
+  grid-column: 1 / -1;
+}
+
+.header {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+}
+
+.logo {
+  align-items: center;
+  background: #f4f0e8;
+  border-radius: 10px;
+  color: #171714;
+  display: flex;
+  flex: 0 0 42px;
+  font-size: 17px;
+  font-weight: 900;
+  height: 42px;
+  justify-content: center;
+}
+
+.heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.heading h2 {
+  font-size: 14px;
+  margin: 3px 0 5px;
+}
+
+.heading p,
+.helpText {
+  color: #77736c;
+  font-size: 10px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.kicker {
+  color: #d4a854;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.state {
+  align-items: center;
+  border: 1px solid #34312b;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 8px;
+  gap: 5px;
+  letter-spacing: 0.08em;
+  padding: 7px 9px;
+  text-transform: uppercase;
+}
+
+.ready {
+  background: rgba(99, 160, 116, 0.1);
+  border-color: rgba(99, 160, 116, 0.28);
+  color: #83b991;
+}
+
+.muted {
+  color: #88837a;
+}
+
+.loading,
+.error,
+.notice {
+  align-items: center;
+  border-radius: 10px;
+  display: flex;
+  font-size: 10px;
+  gap: 8px;
+  padding: 11px 13px;
+}
+
+.loading {
+  background: #171714;
+  color: #88837a;
+}
+
+.error {
+  background: rgba(184, 78, 65, 0.1);
+  border: 1px solid rgba(184, 78, 65, 0.24);
+  color: #d88b7f;
+}
+
+.notice {
+  background: rgba(99, 160, 116, 0.1);
+  border: 1px solid rgba(99, 160, 116, 0.24);
+  color: #94c49f;
+}
+
+.configuration {
+  background: #151512;
+  border: 1px solid #2c2a26;
+  border-radius: 13px;
+  display: grid;
+  gap: 13px;
+  padding: 15px;
+}
+
+.sectionTitle,
+.connectRow,
+.connection {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.sectionTitle strong,
+.connectRow strong,
+.connectionCopy strong {
+  display: block;
+  font-size: 10px;
+}
+
+.sectionTitle span,
+.connectRow span,
+.connectionCopy span {
+  color: #706d66;
+  display: block;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+.redirectBox {
+  align-items: center;
+  background: #11110f;
+  border: 1px solid #292722;
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 11px;
+}
+
+.redirectBox > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.redirectBox span {
+  color: #6e6a63;
+  display: block;
+  font-size: 8px;
+  margin-bottom: 4px;
+}
+
+.redirectBox code {
+  color: #aaa49a;
+  display: block;
+  font-size: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redirectBox button,
+.iconDangerButton {
+  align-items: center;
+  background: transparent;
+  border: 1px solid #35322c;
+  border-radius: 8px;
+  color: #8d887f;
+  cursor: pointer;
+  display: inline-flex;
+  height: 31px;
+  justify-content: center;
+  width: 31px;
+}
+
+.form {
+  border-top: 1px solid #292722;
+  display: grid;
+  gap: 12px;
+  padding-top: 13px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+}
+
+.form label > span {
+  color: #8b867d;
+  font-size: 9px;
+}
+
+.form input {
+  background: #10100e;
+  border: 1px solid #302e29;
+  border-radius: 9px;
+  color: #ddd7cd;
+  font: inherit;
+  font-size: 10px;
+  outline: none;
+  padding: 10px 11px;
+}
+
+.form input:focus {
+  border-color: rgba(212, 168, 84, 0.58);
+}
+
+.form input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.formActions,
+.connectionActions {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+  justify-content: flex-end;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  align-items: center;
+  border-radius: 9px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 9px;
+  gap: 6px;
+  justify-content: center;
+  padding: 9px 11px;
+  text-decoration: none;
+}
+
+.primaryButton {
+  background: rgba(212, 168, 84, 0.12);
+  border: 1px solid rgba(212, 168, 84, 0.4);
+  color: #dfb866;
+}
+
+.secondaryButton {
+  background: #181713;
+  border: 1px solid #35322c;
+  color: #a29c91;
+}
+
+.dangerButton,
+.iconDangerButton {
+  border-color: rgba(184, 78, 65, 0.3);
+  color: #c47d72;
+}
+
+.dangerButton {
+  background: rgba(184, 78, 65, 0.07);
+  border-style: solid;
+  border-width: 1px;
+  margin-right: auto;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled,
+.iconDangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.connection {
+  border: 1px solid #2c2a26;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.connectionIcon {
+  align-items: center;
+  background: rgba(212, 168, 84, 0.09);
+  border-radius: 9px;
+  color: #d4a854;
+  display: flex;
+  flex: 0 0 36px;
+  height: 36px;
+  justify-content: center;
+}
+
+.connectionCopy {
+  flex: 1;
+  min-width: 0;
+}
+
+.connectionCopy strong,
+.connectionCopy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connectRow {
+  background: rgba(212, 168, 84, 0.045);
+  border: 1px dashed rgba(212, 168, 84, 0.25);
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.spinner {
+  animation: google-spin 0.8s linear infinite;
+}
+
+@keyframes google-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 700px) {
+  .header,
+  .connection,
+  .connectRow,
+  .sectionTitle {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .state {
+    margin-left: 56px;
+  }
+
+  .connectionActions,
+  .formActions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .dangerButton {
+    flex: 1;
+  }
+}

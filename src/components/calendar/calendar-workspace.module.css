@@ -1,0 +1,75 @@
+.notice {
+  margin: 0 0 13px;
+  border: 1px solid #302e29;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #11110f;
+  color: #77736d;
+  font-size: 10px;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-color: rgba(239, 139, 106, .35);
+  background: rgba(239, 139, 106, .06);
+  color: #ef9a7f;
+}
+
+.success {
+  border-color: rgba(107, 184, 126, .34);
+  background: rgba(107, 184, 126, .08);
+  color: #8fd09d;
+}
+
+.empty {
+  color: #68655f;
+  text-align: center;
+}
+
+.calendarFrame {
+  flex: 1;
+  min-height: 0;
+}
+
+.sourceNote {
+  margin: 0 0 15px;
+  border: 1px solid rgba(212, 168, 84, .25);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(212, 168, 84, .06);
+  color: #a99b7f;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 43px;
+  color: #aaa69d;
+  font-size: 11px;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.description {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.dangerButton {
+  margin-right: auto;
+  border-color: rgba(239, 139, 106, .35);
+  color: #ef8b6a;
+}
+
+.cancelled {
+  opacity: .62;
+}

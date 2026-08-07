@@ -1,0 +1,75 @@
+@startuml
+!theme plain
+top to bottom direction
+
+title КОНТУР.КОСТРОВ — архитектура production MVP
+
+skinparam backgroundColor #FAF8F3
+skinparam componentBackgroundColor #FFFDF8
+skinparam componentBorderColor #6E685E
+skinparam databaseBackgroundColor #FFF5DD
+skinparam databaseBorderColor #A47A2E
+skinparam ArrowColor #544F47
+skinparam defaultFontName Arial
+
+actor "Пользователь" as user
+
+rectangle "Next.js application" {
+  component "React UI\nFullCalendar + Three.js" as ui
+  component "Route handlers\nAuth · Events · Smart input · Feeds" as api
+  component "Task interpreter\nZod validation · local fallback" as interpreter
+  component "Calendar feed adapter\nHTTPS/webcal · ICS parser" as feed_adapter
+  component "Legacy Google adapter\noptional OAuth · future write" as google_adapter
+}
+
+database "PostgreSQL\nusers · sessions · events\ncategories · audit · outbox" as postgres
+node "Speech service\nFastAPI + GigaAM" as speech
+cloud "AI model API\nOpenRouter Gemma · optional providers" as ai_provider
+cloud "Google Calendar\nSecret iCal address" as google_feed
+cloud "Apple / iCloud\nPublic Calendar link" as apple_feed
+cloud "Google Calendar API\noptional OAuth" as google_api
+
+user -down-> ui : HTTPS
+ui --> api : same-origin JSON / audio
+api --> postgres : Prisma transactions
+api --> speech : audio, <= 20 s
+speech --> api : Russian transcript
+api --> interpreter : text / transcript\nnow · timezone · categories
+interpreter --> ai_provider : server-only JSON request
+ai_provider --> interpreter : proposed structured draft
+interpreter --> api : validated draft\nor local fallback
+api --> ui : parsed draft for confirmation
+api --> feed_adapter : add link / refresh / disconnect
+feed_adapter --> postgres : encrypted feed URL + imported events
+feed_adapter --> google_feed : server-side HTTPS / ICS
+feed_adapter --> apple_feed : server-side HTTPS / ICS
+google_adapter --> postgres : legacy encrypted OAuth data
+google_adapter <--> google_api : OAuth 2.0 / Calendar REST
+api ..> google_adapter : legacy / optional
+
+note bottom of postgres
+  Opaque session digest
+  Ownership checks
+  Encrypted feed links
+  Audit log + outbox
+end note
+
+note bottom of feed_adapter
+  Read-only import
+  Auto-refresh on calendar open
+  Manual refresh available
+end note
+
+note right of speech
+  Model preloaded once
+  Inference concurrency = 1
+  Temporary audio deleted
+end note
+
+note bottom of interpreter
+  Secret stays server-side
+  Category + time validation
+  Confirmation always required
+end note
+
+@enduml

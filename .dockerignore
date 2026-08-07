@@ -1,0 +1,14 @@
+.git
+.github
+.next
+.vercel
+node_modules
+coverage
+tmp
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+docs
+logo.png
