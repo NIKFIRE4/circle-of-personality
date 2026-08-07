@@ -49,6 +49,19 @@ type SpeechCheck = {
 };
 
 /**
+ * Extracts the underlying socket error code (ENOTFOUND, ECONNREFUSED, ...)
+ * without echoing the internal hostname that Node appends to the message.
+ */
+function networkErrorCode(error: unknown): string {
+  const cause = error instanceof Error ? error.cause : undefined;
+  const code = cause && typeof cause === "object" && "code" in cause
+    ? (cause as { code?: unknown }).code
+    : undefined;
+
+  return typeof code === "string" ? code : "unknown";
+}
+
+/**
  * Reports whether the speech container is reachable without ever echoing its
  * internal URL, which is a private service binding.
  */
@@ -79,7 +92,11 @@ async function checkSpeechService(): Promise<SpeechCheck> {
     return {
       status: "down",
       bound: true,
-      detail: timedOut ? "timed out (container may be cold)" : "unreachable",
+      detail: timedOut
+        ? "timed out (container may be cold)"
+        // ENOTFOUND means the service has no endpoint at all (never deployed or
+        // build failed); ECONNREFUSED means it exists but nothing is listening.
+        : `unreachable (${networkErrorCode(error)})`,
       responseTimeMs: Date.now() - startedAt,
     };
   }
