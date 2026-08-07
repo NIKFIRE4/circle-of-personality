@@ -58,10 +58,12 @@ describe("calendar feed secret storage", () => {
   it("encrypts the URL with authenticated encryption", () => {
     const url = "https://calendar.google.com/calendar/ical/example/private/basic.ics";
     const encrypted = encryptCalendarFeedUrl(url);
+    const replacement = encrypted.endsWith("x") ? "y" : "x";
+    const tampered = `${encrypted.slice(0, -1)}${replacement}`;
 
     expect(encrypted).not.toContain("calendar.google.com");
     expect(decryptCalendarFeedUrl(encrypted)).toBe(url);
-    expect(() => decryptCalendarFeedUrl(`${encrypted.slice(0, -1)}x`)).toThrow(
+    expect(() => decryptCalendarFeedUrl(tampered)).toThrow(
       expect.objectContaining({ code: "calendar_feed_url_unreadable" }),
     );
   });
