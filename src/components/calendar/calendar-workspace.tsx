@@ -23,6 +23,7 @@ import {
   toZonedInputValue,
   zonedInputToIso,
 } from "@/lib/calendar-time";
+import { useSubmitGuard } from "@/lib/use-submit-guard";
 
 import styles from "./calendar-workspace.module.css";
 
@@ -466,42 +467,41 @@ function EventDialog({
   const [allDay, setAllDay] = useState(draft.allDay ?? false);
   const [includeInBalance, setIncludeInBalance] = useState(draft.includeInBalance ?? true);
   const [error, setError] = useState("");
-  const [pending, setPending] = useState(false);
+  const { pending, guard } = useSubmitGuard();
   const importedEvent = isImportedEvent(draft);
   const sourceName = calendarSourceName(draft);
 
-  async function action(formData: FormData) {
-    setPending(true);
+  function action(formData: FormData) {
     setError("");
-    try {
-      await onSave({
-        ...draft,
-        title: String(formData.get("title") ?? draft.title),
-        description: String(formData.get("description") ?? draft.description ?? ""),
-        location: String(formData.get("location") ?? draft.location ?? ""),
-        startAt: String(formData.get("startAt") ?? draft.startAt),
-        endAt: String(formData.get("endAt") ?? draft.endAt),
-        categoryId: String(formData.get("categoryId") || ""),
-        allDay,
-        includeInBalance,
-        status: String(formData.get("status") || "PLANNED") as EventStatus,
-      });
-    } catch (caught) {
-      setError(errorMessage(caught, "Не удалось сохранить событие"));
-      setPending(false);
-    }
+    guard(async () => {
+      try {
+        await onSave({
+          ...draft,
+          title: String(formData.get("title") ?? draft.title),
+          description: String(formData.get("description") ?? draft.description ?? ""),
+          location: String(formData.get("location") ?? draft.location ?? ""),
+          startAt: String(formData.get("startAt") ?? draft.startAt),
+          endAt: String(formData.get("endAt") ?? draft.endAt),
+          categoryId: String(formData.get("categoryId") || ""),
+          allDay,
+          includeInBalance,
+          status: String(formData.get("status") || "PLANNED") as EventStatus,
+        });
+      } catch (caught) {
+        setError(errorMessage(caught, "Не удалось сохранить событие"));
+      }
+    });
   }
 
-  async function remove() {
-    setPending(true);
+  function remove() {
     setError("");
-    try {
-      await onDelete(draft);
-      setPending(false);
-    } catch (caught) {
-      setError(errorMessage(caught, "Не удалось удалить событие"));
-      setPending(false);
-    }
+    guard(async () => {
+      try {
+        await onDelete(draft);
+      } catch (caught) {
+        setError(errorMessage(caught, "Не удалось удалить событие"));
+      }
+    });
   }
 
   return (

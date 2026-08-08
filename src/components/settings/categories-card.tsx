@@ -11,6 +11,7 @@ import {
   defaultCategoryGuide,
   OMITTED_SPHERE_NOTE,
 } from "@/lib/default-categories";
+import { useSubmitGuard } from "@/lib/use-submit-guard";
 
 import styles from "./categories-card.module.css";
 
@@ -173,22 +174,22 @@ function BalanceModelExplainer() {
 }
 
 function CategoryDialog({ category, onClose, onSave }: { category: Category | null; onClose: () => void; onSave: (payload: CategoryPayload) => Promise<void> }) {
-  const [pending, setPending] = useState(false);
+  const { pending, guard } = useSubmitGuard();
   const [error, setError] = useState("");
 
-  async function action(formData: FormData) {
-    setPending(true);
+  function action(formData: FormData) {
     setError("");
-    try {
-      await onSave({
-        name: String(formData.get("name") || ""),
-        color: String(formData.get("color") || "#D8A84F"),
-        targetMinutesPerWeek: Number(formData.get("targetMinutesPerWeek")),
-      });
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Не удалось сохранить сферу");
-      setPending(false);
-    }
+    guard(async () => {
+      try {
+        await onSave({
+          name: String(formData.get("name") || ""),
+          color: String(formData.get("color") || "#D8A84F"),
+          targetMinutesPerWeek: Number(formData.get("targetMinutesPerWeek")),
+        });
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Не удалось сохранить сферу");
+      }
+    });
   }
 
   return (

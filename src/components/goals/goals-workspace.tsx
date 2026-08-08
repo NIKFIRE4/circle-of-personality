@@ -17,6 +17,7 @@ import { useMemo, useState } from "react";
 
 import type { GoalDto } from "@/lib/goals";
 import { calculateGoalProgress } from "@/lib/progress";
+import { useSubmitGuard } from "@/lib/use-submit-guard";
 import type { Category as OverviewCategory } from "@/components/settings/categories-card";
 
 import styles from "./goals-workspace.module.css";
@@ -275,11 +276,10 @@ function GoalDialog({
 }) {
   const goal = state.mode === "edit" ? state.goal : null;
   const initialCategoryId = state.mode === "create" ? state.categoryId ?? "" : goal?.categoryId ?? "";
-  const [pending, setPending] = useState(false);
+  const { pending, guard } = useSubmitGuard();
   const [error, setError] = useState("");
 
-  async function action(formData: FormData) {
-    setPending(true);
+  function action(formData: FormData) {
     setError("");
     const targetDate = String(formData.get("targetDate") || "");
     const payload: GoalPayload = {
@@ -293,12 +293,13 @@ function GoalDialog({
       status: String(formData.get("status")) as GoalPayload["status"],
     };
 
-    try {
-      await onSave(payload);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Не удалось сохранить цель");
-      setPending(false);
-    }
+    guard(async () => {
+      try {
+        await onSave(payload);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Не удалось сохранить цель");
+      }
+    });
   }
 
   return (
