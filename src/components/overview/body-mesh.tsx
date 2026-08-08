@@ -10,6 +10,8 @@ import {
   type HumanoidVariant,
 } from "@/lib/humanoid-variant";
 
+import styles from "@/app/(dashboard)/overview/overview.module.css";
+
 // WebP at 768x1152: <Image> is unoptimized in production (see next.config.ts),
 // so these ship to the browser as-is and the source PNGs were ~3x heavier.
 const HUMANOID_ASSETS: Record<HumanoidVariant, string> = {
@@ -78,10 +80,10 @@ export function BodyMesh({
   }
 
   return (
-    <>
-      <label className="human-selector">
+    <div className={styles.visual}>
+      <label className={styles.selector}>
         <span>Персонаж</span>
-        <span className="human-selector-control">
+        <span className={styles.selectorControl}>
           <select
             aria-label="Выбрать персонажа"
             onChange={(event) =>
@@ -97,32 +99,33 @@ export function BodyMesh({
           </select>
         </span>
       </label>
+      <div aria-hidden="true" className={styles.ring} />
       <div
         aria-hidden="true"
-        className={`human-figure human-figure-${variant}`}
+        className={`${styles.figure} ${styles[variant]}`}
         data-variant={variant}
       >
         <Image
           alt=""
-          className="human-figure-echo"
+          className={styles.figureEcho}
           height={1152}
-          sizes="(max-width: 760px) 62vw, 360px"
+          sizes="(max-width: 980px) 72vw, 34vw"
           src={src}
           width={768}
         />
-        <div className="human-figure-turn" key={variant}>
+        <div className={styles.figureTurn} key={variant}>
           <Image
             alt=""
-            className="human-figure-image"
+            className={styles.figureImage}
             height={1152}
             preload
-            sizes="(max-width: 760px) 62vw, 360px"
+            sizes="(max-width: 980px) 72vw, 34vw"
             src={src}
             width={768}
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, CalendarDays, Crosshair, Goal, LogOut, Plus, Settings } from "lucide-react";
 import { BrandMark } from "@/components/ui/brand-mark";
 
+import styles from "./app-shell.module.css";
+
 const navigation = [
   { href: "/overview", label: "Обзор", icon: Crosshair },
   { href: "/calendar", label: "Календарь", icon: CalendarDays },
@@ -31,37 +33,53 @@ export function AppShell({ children, user, balanceTotal }: AppShellProps) {
   }
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <div className={styles.shell}>
+      <a className={styles.skipLink} href="#dashboard-content">Перейти к содержимому</a>
+      <aside className={styles.sidebar}>
         <BrandMark />
-        <div className="nav-label">Пространство</div>
-        <nav className="nav-list" aria-label="Основная навигация">
+        <div className={styles.navLabel}>Пространство</div>
+        <nav className={styles.navList} aria-label="Основная навигация">
           {navigation.map(({ href, label, icon: Icon }) => (
-            <Link key={href} className={`nav-item ${pathname.startsWith(href) ? "active" : ""}`} href={href}>
+            <Link
+              key={href}
+              aria-current={pathname.startsWith(href) ? "page" : undefined}
+              className={styles.navItem}
+              href={href}
+              title={label}
+            >
               <Icon size={16} strokeWidth={1.7} /><span>{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="sidebar-bottom">
-          <div className="sidebar-progress">
-            <div className="sidebar-progress-head"><span>Баланс недели</span><strong>{balanceTotal}%</strong></div>
-            <div className="progress-track" aria-label={`Баланс недели: ${balanceTotal}%`}><span style={{ width: `${balanceTotal}%` }} /></div>
+        <div className={styles.sidebarBottom}>
+          <div className={styles.sidebarProgress}>
+            <div className={styles.progressHead}><span>Баланс недели</span><strong>{balanceTotal}%</strong></div>
+            <div
+              aria-label={`Баланс недели: ${balanceTotal}%`}
+              aria-valuemax={100}
+              aria-valuemin={0}
+              aria-valuenow={balanceTotal}
+              className={styles.progressTrack}
+              role="progressbar"
+            >
+              <span style={{ width: `${balanceTotal}%` }} />
+            </div>
           </div>
-          <div className="profile-card">
-            <div className="avatar">{(user.name || user.email).slice(0, 2).toUpperCase()}</div>
-            <div className="profile-copy"><strong>{user.name || "Пользователь"}</strong><span>{user.email}</span></div>
-            <button className="logout-button" onClick={logout} aria-label="Выйти"><LogOut size={15} /></button>
+          <div className={styles.profileCard}>
+            <div className={styles.avatar}>{(user.name || user.email).slice(0, 2).toUpperCase()}</div>
+            <div className={styles.profileCopy}><strong>{user.name || "Пользователь"}</strong><span>{user.email}</span></div>
+            <button className={styles.logoutButton} onClick={logout} aria-label="Выйти" type="button"><LogOut size={15} /></button>
           </div>
         </div>
       </aside>
-      <div className="app-main">
-        <header className="topbar">
-          <div className="breadcrumbs"><span>КОНТУР.КОСТРОВ</span><span>/</span><strong>{current}</strong></div>
-          <div className="topbar-actions">
-            <Link href="/calendar?create=1" className="new-task-button"><Plus size={14} /><span>Новая задача</span></Link>
+      <div className={styles.main}>
+        <header className={styles.topbar}>
+          <div className={styles.breadcrumbs}><span>КОНТУР.КОСТРОВ</span><span>/</span><strong>{current}</strong></div>
+          <div className={styles.topbarActions}>
+            <Link href="/calendar?create=1" className={styles.newTaskButton}><Plus size={14} /><span>Новая задача</span></Link>
           </div>
         </header>
-        {children}
+        <div className={styles.content} id="dashboard-content" tabIndex={-1}>{children}</div>
       </div>
     </div>
   );

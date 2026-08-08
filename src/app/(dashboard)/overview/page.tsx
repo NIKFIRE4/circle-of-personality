@@ -8,6 +8,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDashboardData, type BalanceMetric } from "@/lib/dashboard";
 
+import styles from "./overview.module.css";
+
 export default async function OverviewPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/");
@@ -33,19 +35,28 @@ export default async function OverviewPage() {
   const rightMetrics = dashboard.metrics.filter((_, index) => index % 2 === 1);
 
   return (
-    <main className="page-content overview-focus-page">
-      <section className="panel human-panel human-panel-full">
-        <div className="human-stage">
-          <div className="overview-hero-copy">
+    <main className={styles.page}>
+      <section className={styles.hero} aria-labelledby="overview-title">
+        <header className={styles.heroHeader}>
+          <div className={styles.heroCopy}>
             <span className="eyebrow">Живой профиль недели</span>
-            <h1>Ваш контур<br /><em>сегодня</em></h1>
-            <p>Персонаж отражает сферу, которой вы уделяете больше всего внимания.</p>
-            <div className="overview-summary">
-              <span><small>Общий баланс</small><strong>{dashboard.total}%</strong></span>
-              <span><small>В фокусе</small><strong>{dashboard.topCategory?.name ?? "Поиск ритма"}</strong></span>
-            </div>
+            <h1 id="overview-title">Ваш контур <em>сегодня</em></h1>
+            <p>Смотрите, каким сферам достаётся ваше время, и мягко возвращайте неделю к нужному ритму.</p>
           </div>
-          <div className="human-ring" />
+          <dl className={styles.summary}>
+            <div>
+              <dt>Общий баланс</dt>
+              <dd>{dashboard.total}%</dd>
+            </div>
+            <div>
+              <dt>В фокусе</dt>
+              <dd>{dashboard.topCategory?.name ?? "Поиск ритма"}</dd>
+            </div>
+          </dl>
+        </header>
+
+        <div className={styles.balanceGrid}>
+          <MetricColumn metrics={leftMetrics} side="left" />
           <BodyMesh
             categorySlug={
               dashboard.topCategory?.completedMinutes
@@ -54,25 +65,24 @@ export default async function OverviewPage() {
             }
             preferenceKey={`life-balance:humanoid:${user.id}`}
           />
-          <MetricColumn metrics={leftMetrics} side="left" />
           <MetricColumn metrics={rightMetrics} side="right" />
-          {dashboard.unassignedEvents > 0 && (
-            <Link className="overview-hint" href="/calendar">
-              {formatUnassigned(dashboard.unassignedEvents)} на этой неделе без
-              сферы — они не попадают в проценты. Откройте календарь, чтобы
-              распределить.
-            </Link>
-          )}
         </div>
+
+        {dashboard.unassignedEvents > 0 && (
+          <Link className={styles.hint} href="/calendar">
+            <span>{formatUnassigned(dashboard.unassignedEvents)} без сферы</span>
+            <small>Распределите их в календаре, чтобы они учитывались в балансе</small>
+          </Link>
+        )}
       </section>
 
-      <div style={{ marginTop: 24 }}>
+      <section className={styles.settingsSection} aria-label="Настройка сфер обзора">
         <CategoriesCard
           initialCategories={categories}
           title="Сферы обзора"
-          description="Единственное место, где меняется состав сфер: добавляйте, переименовывайте или убирайте их отсюда. В «Целях» они закреплены как заголовки."
+          description="Управляйте составом сфер и недельными ориентирами. Изменения сразу отражаются в контуре и аналитике."
         />
-      </div>
+      </section>
     </main>
   );
 }
@@ -97,11 +107,11 @@ function MetricColumn({
   side: "left" | "right";
 }) {
   return (
-    <div className={`metric-column metric-column-${side}`}>
+    <ul className={`${styles.metricColumn} ${side === "left" ? styles.metricColumnLeft : styles.metricColumnRight}`}>
       {metrics.map((metric) => (
         <Metric key={metric.id} metric={metric} />
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -112,18 +122,24 @@ function Metric({ metric }: { metric: BalanceMetric }) {
     : "Без недельной цели";
 
   return (
-    <div className="metric-badge" style={style}>
-      <div className="metric-heading">
-        <span className="metric-dot" />
+    <li className={styles.metricCard} style={style}>
+      <div className={styles.metricHeading}>
+        <span className={styles.metricDot} />
         <span>{metric.name}</span>
         <strong>{metric.value}%</strong>
       </div>
-      <div className="metric-progress">
+      <div
+        aria-label={`${metric.name}: ${metric.value}%`}
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={metric.value}
+        className={styles.metricProgress}
+        role="progressbar"
+      >
         <i style={{ width: `${metric.value}%` }} />
       </div>
       <small>{timeLabel}</small>
-      <i aria-hidden="true" className="metric-connector" />
-    </div>
+    </li>
   );
 }
 
