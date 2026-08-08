@@ -12,14 +12,12 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import type { GoalDto } from "@/lib/goals";
 import { calculateGoalProgress } from "@/lib/progress";
-import {
-  CategoriesCard,
-  type Category as OverviewCategory,
-} from "@/components/settings/categories-card";
+import type { Category as OverviewCategory } from "@/components/settings/categories-card";
 
 import styles from "./goals-workspace.module.css";
 
@@ -34,7 +32,63 @@ type GoalPayload = {
   status: "ACTIVE" | "COMPLETED" | "ARCHIVED";
 };
 
-type GoalDialogState = { mode: "create" } | { mode: "edit"; goal: GoalDto };
+type GoalDialogState =
+  | { mode: "create"; categoryId: string | null }
+  | { mode: "edit"; goal: GoalDto };
+
+type GoalGroup = {
+  key: string;
+  name: string;
+  color: string;
+  categoryId: string | null;
+  archived: boolean;
+  goals: GoalDto[];
+};
+
+/**
+ * Spheres are only ever edited from Overview now; here they are a fixed
+ * grouping key. A goal can still point at a sphere that was archived after
+ * the goal was created (categories only soft-delete), so those goals get
+ * their own read-only group instead of silently vanishing from view.
+ */
+function buildGoalGroups(goals: GoalDto[], categories: OverviewCategory[]): GoalGroup[] {
+  const activeGroups = new Map<string, GoalGroup>(
+    categories.map((category) => [
+      category.id,
+      { key: category.id, name: category.name, color: category.color, categoryId: category.id, archived: false, goals: [] },
+    ]),
+  );
+  const archivedGroups = new Map<string, GoalGroup>();
+  const orphaned: GoalDto[] = [];
+
+  for (const goal of goals) {
+    const active = goal.categoryId ? activeGroups.get(goal.categoryId) : undefined;
+    if (active) {
+      active.goals.push(goal);
+      continue;
+    }
+    if (goal.categoryId) {
+      const archived = archivedGroups.get(goal.categoryId) ?? {
+        key: goal.categoryId,
+        name: goal.category?.name ?? "Архивная сфера",
+        color: goal.category?.color ?? "#766a58",
+        categoryId: goal.categoryId,
+        archived: true,
+        goals: [],
+      };
+      archived.goals.push(goal);
+      archivedGroups.set(goal.categoryId, archived);
+      continue;
+    }
+    orphaned.push(goal);
+  }
+
+  const groups = [...activeGroups.values(), ...archivedGroups.values()];
+  if (orphaned.length) {
+    groups.push({ key: "none", name: "Без сферы", color: "#5c5952", categoryId: null, archived: false, goals: orphaned });
+  }
+  return groups;
+}
 
 export function GoalsWorkspace({
   initialGoals,
@@ -46,6 +100,7 @@ export function GoalsWorkspace({
   const [goals, setGoals] = useState(initialGoals);
   const [dialog, setDialog] = useState<GoalDialogState | null>(null);
   const [error, setError] = useState("");
+  const groups = useMemo(() => buildGoalGroups(goals, categories), [goals, categories]);
 
   async function saveGoal(payload: GoalPayload) {
     const existing = dialog?.mode === "edit" ? dialog.goal : null;
@@ -89,72 +144,65 @@ export function GoalsWorkspace({
         <div>
           <span className="eyebrow">Направление</span>
           <h1>Цели</h1>
-          <p>Большие изменения начинаются с ясного следующего шага.</p>
+          <p>Сферы закреплены как заголовки — их состав меняется в <Link href="/overview">обзоре</Link>. Здесь только цели внутри них.</p>
         </div>
-        <button className="new-task-button" onClick={() => setDialog({ mode: "create" })}>
+        <button className="new-task-button" onClick={() => setDialog({ mode: "create", categoryId: null })}>
           <Plus size={14} />
           <span>Добавить цель</span>
         </button>
       </div>
 
-      <div className={styles.categoriesSection}>
-        <CategoriesCard
-          initialCategories={categories}
-          title="Сферы обзора"
-          description="Все сферы, которые отображаются в обзоре. Здесь можно изменить название, цвет и недельную цель или убрать сферу из обзора."
-        />
-      </div>
-
-      <div className={styles.sectionHeading}>
-        <div>
-          <span className="eyebrow">Результат</span>
-          <h2>Личные цели</h2>
-        </div>
-      </div>
-
       {error && <div className={styles.toolbarError} role="alert">{error}</div>}
 
-      {goals.length ? (
-        <section className="cards-grid">
-          {goals.map((goal) => {
-            const progress = Math.round(calculateGoalProgress(goal.currentValue, goal.targetValue));
-            const color = goal.category?.color ?? "#D8A84F";
-            return (
-              <article className="panel goal-card" key={goal.id}>
-                <div className="goal-top">
-                  <div className="goal-icon" style={{ color }}><Target size={18} /></div>
-                  <div className={styles.topActions}>
-                    <span className="goal-percent">{progress}%</span>
-                    <button className={styles.iconButton} onClick={() => setDialog({ mode: "edit", goal })} aria-label={`Изменить цель ${goal.title}`}>
-                      <Pencil size={13} />
+      {groups.length ? (
+        <div className={styles.groups}>
+          {groups.map((group) => (
+            <section className={styles.categoryGroup} key={group.key}>
+              <div className={styles.categoryGroupHead}>
+                <i className={styles.categoryDot} style={{ background: group.color }} />
+                <h2>{group.name}</h2>
+                {group.archived && <span className={styles.archivedBadge}>архив</span>}
+                <span className={styles.categoryCount}>{pluralGoals(group.goals.length)}</span>
+              </div>
+              {group.goals.length ? (
+                <section className="cards-grid">
+                  {group.goals.map((goal) => (
+                    <GoalCard
+                      key={goal.id}
+                      goal={goal}
+                      onEdit={() => setDialog({ mode: "edit", goal })}
+                      onDelete={() => void deleteGoal(goal)}
+                    />
+                  ))}
+                  {!group.archived && (
+                    <button
+                      className="panel goal-card"
+                      style={{ borderStyle: "dashed", alignItems: "center", justifyContent: "center", color: "#69665f", cursor: "pointer" }}
+                      onClick={() => setDialog({ mode: "create", categoryId: group.categoryId })}
+                    >
+                      <Plus size={22} />
+                      <span style={{ marginTop: 12, fontSize: 11 }}>Новая цель</span>
                     </button>
-                    <button className={`${styles.iconButton} ${styles.danger}`} onClick={() => void deleteGoal(goal)} aria-label={`Удалить цель ${goal.title}`}>
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
-                <h3>{goal.title}</h3>
-                <p>{goal.description || goal.category?.name || "Без сферы"}</p>
-                <div className={styles.meta}>
-                  <span className={styles.status}>{statusLabel(goal.status)}</span>
-                  {goal.targetDate && <span className={styles.status}>до {formatTargetDate(goal.targetDate)}</span>}
-                </div>
-                <div className="goal-progress"><span style={{ width: `${progress}%`, background: color }} /></div>
-                <div className="goal-footer">
-                  <span>{formatValue(goal.currentValue, goal.unit)}</span>
-                  <span>{formatValue(goal.targetValue, goal.unit)}</span>
-                </div>
-              </article>
-            );
-          })}
-          <button className="panel goal-card" style={{ borderStyle: "dashed", alignItems: "center", justifyContent: "center", color: "#69665f", cursor: "pointer" }} onClick={() => setDialog({ mode: "create" })}>
-            <Plus size={22} />
-            <span style={{ marginTop: 12, fontSize: 11 }}>Новая цель</span>
-          </button>
-        </section>
+                  )}
+                </section>
+              ) : (
+                <button
+                  className={`panel ${styles.emptyGroup}`}
+                  onClick={() => setDialog({ mode: "create", categoryId: group.categoryId })}
+                >
+                  <Plus size={18} />
+                  <span>Добавить первую цель в «{group.name}»</span>
+                </button>
+              )}
+            </section>
+          ))}
+        </div>
       ) : (
         <section className={`panel ${styles.empty}`}>
-          <div><strong>Целей пока нет</strong><span>Создайте первую цель и задайте измеримый результат.</span></div>
+          <div>
+            <strong>Сфер пока нет</strong>
+            <span>Добавьте хотя бы одну сферу в <Link href="/overview">обзоре</Link> — тогда здесь появится место для целей.</span>
+          </div>
         </section>
       )}
 
@@ -168,6 +216,47 @@ export function GoalsWorkspace({
         />
       )}
     </>
+  );
+}
+
+function GoalCard({
+  goal,
+  onEdit,
+  onDelete,
+}: {
+  goal: GoalDto;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const progress = Math.round(calculateGoalProgress(goal.currentValue, goal.targetValue));
+  const color = goal.category?.color ?? "#D8A84F";
+
+  return (
+    <article className="panel goal-card">
+      <div className="goal-top">
+        <div className="goal-icon" style={{ color }}><Target size={18} /></div>
+        <div className={styles.topActions}>
+          <span className="goal-percent">{progress}%</span>
+          <button className={styles.iconButton} onClick={onEdit} aria-label={`Изменить цель ${goal.title}`}>
+            <Pencil size={13} />
+          </button>
+          <button className={`${styles.iconButton} ${styles.danger}`} onClick={onDelete} aria-label={`Удалить цель ${goal.title}`}>
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+      <h3>{goal.title}</h3>
+      <p>{goal.description || goal.category?.name || "Без сферы"}</p>
+      <div className={styles.meta}>
+        <span className={styles.status}>{statusLabel(goal.status)}</span>
+        {goal.targetDate && <span className={styles.status}>до {formatTargetDate(goal.targetDate)}</span>}
+      </div>
+      <div className="goal-progress"><span style={{ width: `${progress}%`, background: color }} /></div>
+      <div className="goal-footer">
+        <span>{formatValue(goal.currentValue, goal.unit)}</span>
+        <span>{formatValue(goal.targetValue, goal.unit)}</span>
+      </div>
+    </article>
   );
 }
 
@@ -185,6 +274,7 @@ function GoalDialog({
   onDelete?: () => Promise<boolean>;
 }) {
   const goal = state.mode === "edit" ? state.goal : null;
+  const initialCategoryId = state.mode === "create" ? state.categoryId ?? "" : goal?.categoryId ?? "";
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -258,7 +348,7 @@ function GoalDialog({
               <Layers3 size={18} aria-hidden="true" />
               <label className={styles.quickBody}>
                 <span className={styles.quickLabel}>Сфера</span>
-                <select name="categoryId" defaultValue={goal?.categoryId ?? ""}>
+                <select name="categoryId" defaultValue={initialCategoryId}>
                   <option value="">Без сферы</option>
                   {goal?.category && !categories.some((category) => category.id === goal.categoryId) && (
                     <option value={goal.category.id}>{goal.category.name} · архив</option>
@@ -333,4 +423,13 @@ function statusLabel(status: GoalDto["status"]) {
   if (status === "COMPLETED") return "Завершена";
   if (status === "ARCHIVED") return "В архиве";
   return "Активна";
+}
+
+function pluralGoals(count: number): string {
+  const rules = new Intl.PluralRules("ru-RU");
+  const noun = { one: "цель", few: "цели", many: "целей" }[
+    rules.select(count) as "one" | "few" | "many"
+  ] ?? "целей";
+
+  return `${count} ${noun}`;
 }

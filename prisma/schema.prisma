@@ -139,6 +139,7 @@ model Event {
   startAt              DateTime
   endAt                DateTime
   allDay               Boolean     @default(false)
+  includeInBalance     Boolean     @default(true)
   status               EventStatus @default(PLANNED)
   source               EventSource @default(MANUAL)
   externalId           String?     @db.VarChar(512)

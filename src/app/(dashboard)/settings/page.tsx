@@ -1,10 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CalendarFeedCard } from "@/components/settings/calendar-feed-card";
-import { CategoriesCard } from "@/components/settings/categories-card";
 import { ProfileSettingsCard } from "@/components/settings/profile-settings-card";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -13,28 +12,13 @@ export default async function SettingsPage() {
     redirect("/");
   }
 
-  const categories = await prisma.balanceCategory.findMany({
-    where: { userId: user.id, isArchived: false },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      color: true,
-      icon: true,
-      targetMinutesPerWeek: true,
-      sortOrder: true,
-      isArchived: true,
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-  });
-
   return (
     <main className="page-content">
       <div className="page-heading">
         <div>
           <span className="eyebrow">Ваше пространство</span>
           <h1>Настройки</h1>
-          <p>Профиль, сферы жизни и подключённые календари — без технических деталей.</p>
+          <p>Профиль и подключённые календари — без технических деталей. Сферы жизни настраиваются в <Link href="/overview">обзоре</Link>.</p>
         </div>
       </div>
 
@@ -49,7 +33,6 @@ export default async function SettingsPage() {
           />
         </article>
 
-        <CategoriesCard initialCategories={categories} />
         <CalendarFeedCard />
       </section>
     </main>

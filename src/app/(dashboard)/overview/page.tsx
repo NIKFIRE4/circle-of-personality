@@ -3,14 +3,32 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BodyMesh } from "@/components/overview/body-mesh";
+import { CategoriesCard } from "@/components/settings/categories-card";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getDashboardData, type BalanceMetric } from "@/lib/dashboard";
 
 export default async function OverviewPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/");
 
-  const dashboard = await getDashboardData(user.id, user.timeZone);
+  const [dashboard, categories] = await Promise.all([
+    getDashboardData(user.id, user.timeZone),
+    prisma.balanceCategory.findMany({
+      where: { userId: user.id, isArchived: false },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        color: true,
+        icon: true,
+        targetMinutesPerWeek: true,
+        sortOrder: true,
+        isArchived: true,
+      },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
+  ]);
   const leftMetrics = dashboard.metrics.filter((_, index) => index % 2 === 0);
   const rightMetrics = dashboard.metrics.filter((_, index) => index % 2 === 1);
 
@@ -38,6 +56,14 @@ export default async function OverviewPage() {
           )}
         </div>
       </section>
+
+      <div style={{ marginTop: 24 }}>
+        <CategoriesCard
+          initialCategories={categories}
+          title="Сферы обзора"
+          description="Единственное место, где меняется состав сфер: добавляйте, переименовывайте или убирайте их отсюда. В «Целях» они закреплены как заголовки."
+        />
+      </div>
     </main>
   );
 }

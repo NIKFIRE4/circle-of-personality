@@ -12,6 +12,7 @@ export const eventSelect = {
   startAt: true,
   endAt: true,
   allDay: true,
+  includeInBalance: true,
   status: true,
   source: true,
   externalId: true,
@@ -50,6 +51,7 @@ export const createEventSchema = z
     startAt: dateString,
     endAt: dateString,
     allDay: z.boolean().default(false),
+    includeInBalance: z.boolean().default(true),
     status: z.enum(["PLANNED", "COMPLETED", "CANCELLED"]).default("PLANNED"),
     source: z.enum(["MANUAL", "VOICE"]).default("MANUAL"),
     voiceCommandId: z.string().trim().min(1).max(191).nullable().optional(),
@@ -80,6 +82,7 @@ export const updateEventSchema = z
     startAt: dateString.optional(),
     endAt: dateString.optional(),
     allDay: z.boolean().optional(),
+    includeInBalance: z.boolean().optional(),
     status: z.enum(["PLANNED", "COMPLETED", "CANCELLED"]).optional(),
   })
   .strict()
@@ -104,7 +107,7 @@ export const eventsQuerySchema = z
     }
   });
 
-const EXTERNAL_LOCAL_EVENT_FIELDS = new Set(["categoryId", "status"]);
+const EXTERNAL_LOCAL_EVENT_FIELDS = new Set(["categoryId", "status", "includeInBalance"]);
 
 export function unsupportedExternalEventFields(fields: string[]): string[] {
   return fields.filter((field) => !EXTERNAL_LOCAL_EVENT_FIELDS.has(field));

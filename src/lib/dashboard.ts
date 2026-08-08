@@ -76,6 +76,7 @@ export async function getDashboardDataAt(
         startAt: true,
         endAt: true,
         allDay: true,
+        includeInBalance: true,
         status: true,
         categoryId: true,
         category: { select: { name: true, color: true } },

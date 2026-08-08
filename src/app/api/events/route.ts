@@ -102,6 +102,7 @@ export async function POST(request: Request) {
           startAt: input.startAt,
           endAt: input.endAt,
           allDay: input.allDay,
+          includeInBalance: input.includeInBalance,
           status: input.status,
           source: input.source,
           completedAt: input.status === "COMPLETED" ? new Date() : null,

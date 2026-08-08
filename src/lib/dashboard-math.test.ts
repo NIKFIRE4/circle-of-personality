@@ -31,6 +31,7 @@ function event(
     status: "COMPLETED",
     categoryId: category.id,
     allDay: false,
+    includeInBalance: true,
     ...overrides,
   };
 }
@@ -114,6 +115,24 @@ describe("dashboard duration math", () => {
       completedMinutes: 15,
       value: 25,
     });
+  });
+
+  it("excludes tasks opted out of the balance wheel", () => {
+    const start = new Date("2026-08-03T00:00:00.000Z");
+    const end = new Date("2026-08-10T00:00:00.000Z");
+    const [metric] = buildMetrics(
+      [category],
+      [
+        event("2026-08-03T10:00:00.000Z", "2026-08-03T10:15:00.000Z"),
+        event("2026-08-04T10:00:00.000Z", "2026-08-04T10:30:00.000Z", {
+          includeInBalance: false,
+        }),
+      ],
+      start,
+      end,
+    );
+
+    expect(metric).toMatchObject({ completedMinutes: 15, value: 25 });
   });
 
   it("derives both metric and total percentages from rounded minutes", () => {
@@ -279,6 +298,17 @@ describe("countUnassignedEvents", () => {
       }),
       event("2026-08-11T09:00:00.000Z", "2026-08-11T10:00:00.000Z", {
         categoryId: null,
+      }),
+    ];
+
+    expect(countUnassignedEvents(events, rangeStart, rangeEnd)).toBe(0);
+  });
+
+  it("ignores tasks opted out of the balance wheel", () => {
+    const events = [
+      event("2026-08-04T09:00:00.000Z", "2026-08-04T10:00:00.000Z", {
+        categoryId: null,
+        includeInBalance: false,
       }),
     ];
 

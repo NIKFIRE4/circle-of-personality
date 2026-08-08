@@ -41,6 +41,7 @@ type ApiEvent = {
   startAt: string;
   endAt: string;
   allDay: boolean;
+  includeInBalance: boolean;
   status: EventStatus;
   source: EventSource;
   calendarConnectionId: string | null;
@@ -53,6 +54,7 @@ type EventDraft = VoiceTaskDraft & {
   description?: string | null;
   location?: string | null;
   allDay?: boolean;
+  includeInBalance?: boolean;
   status?: EventStatus;
   source?: EventSource;
   calendarConnectionId?: string | null;
@@ -230,6 +232,7 @@ export function CalendarWorkspace({
       startAt: toZonedInputValue(start, timeZone, allDay),
       endAt: toZonedInputValue(end, timeZone, allDay),
       allDay,
+      includeInBalance: true,
       status: "PLANNED",
       source: "MANUAL",
     });
@@ -242,6 +245,7 @@ export function CalendarWorkspace({
       ? {
           categoryId: draft.categoryId || null,
           status: draft.status ?? "PLANNED",
+          includeInBalance: draft.includeInBalance ?? true,
         }
       : {
           title: draft.title.trim(),
@@ -251,6 +255,7 @@ export function CalendarWorkspace({
           endAt: zonedInputToIso(draft.endAt, timeZone),
           categoryId: draft.categoryId || null,
           allDay,
+          includeInBalance: draft.includeInBalance ?? true,
           status: draft.status ?? "PLANNED",
         };
     const creating = !draft.id;
@@ -459,6 +464,7 @@ function EventDialog({
   onDelete: (draft: EventDraft) => Promise<void>;
 }) {
   const [allDay, setAllDay] = useState(draft.allDay ?? false);
+  const [includeInBalance, setIncludeInBalance] = useState(draft.includeInBalance ?? true);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const importedEvent = isImportedEvent(draft);
@@ -477,6 +483,7 @@ function EventDialog({
         endAt: String(formData.get("endAt") ?? draft.endAt),
         categoryId: String(formData.get("categoryId") || ""),
         allDay,
+        includeInBalance,
         status: String(formData.get("status") || "PLANNED") as EventStatus,
       });
     } catch (caught) {
@@ -515,6 +522,7 @@ function EventDialog({
             <label className="field"><span className="field-label">Завершение</span><input key={`end-${allDay}`} name="endAt" type={allDay ? "date" : "datetime-local"} defaultValue={endInputDefault(draft.startAt, draft.endAt, allDay)} disabled={importedEvent} required /></label>
             <label className="field"><span className="field-label">Сфера жизни</span><select name="categoryId" defaultValue={draft.categoryId ?? ""}><option value="">Без категории</option>{draft.categoryId && !categories.some((category) => category.id === draft.categoryId) && <option value={draft.categoryId}>{draft.categoryName || "Архивная сфера"} · архив</option>}{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
             <label className="field"><span className="field-label">Статус</span><select name="status" defaultValue={draft.status ?? "PLANNED"}><option value="PLANNED">Запланировано</option><option value="COMPLETED">Выполнено</option><option value="CANCELLED">Отменено</option></select></label>
+            <label className="field full"><span className="field-label">Колесо баланса</span><span className={styles.checkbox}><input type="checkbox" checked={includeInBalance} onChange={(event) => setIncludeInBalance(event.target.checked)} /> Учитывать эту задачу в колесе баланса</span></label>
           </div>
           <div className="auth-error" role="alert">{error}</div>
           <div className="form-actions">
@@ -548,6 +556,7 @@ function draftFromEvent(event: ApiEvent, timeZone: string): EventDraft {
     categoryId: event.categoryId ?? undefined,
     categoryName: event.category?.name,
     allDay: event.allDay,
+    includeInBalance: event.includeInBalance,
     status: event.status,
     source: event.source,
     calendarConnectionId: event.calendarConnectionId,
@@ -575,6 +584,7 @@ function defaultDraft(timeZone: string): EventDraft {
     startAt: toZonedInputValue(start, timeZone, false),
     endAt: toZonedInputValue(new Date(start.getTime() + 60 * 60 * 1000), timeZone, false),
     allDay: false,
+    includeInBalance: true,
     status: "PLANNED",
     source: "MANUAL",
   };

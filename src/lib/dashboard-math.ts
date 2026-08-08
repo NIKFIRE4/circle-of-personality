@@ -11,6 +11,7 @@ export type DashboardMathEvent = {
   status: DashboardEventStatus;
   categoryId: string | null;
   allDay: boolean;
+  includeInBalance: boolean;
 };
 
 export type DashboardCategory = {
@@ -43,6 +44,7 @@ export function buildMetrics(
         .filter(
           (event) =>
             !event.allDay &&
+            event.includeInBalance &&
             event.categoryId === category.id &&
             event.status !== "CANCELLED" &&
             event.startAt < rangeEnd &&
@@ -85,6 +87,7 @@ export function countUnassignedEvents(
   return events.filter(
     (event) =>
       !event.allDay &&
+      event.includeInBalance &&
       !event.categoryId &&
       event.status !== "CANCELLED" &&
       event.startAt < rangeEnd &&
