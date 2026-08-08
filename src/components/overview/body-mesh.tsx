@@ -125,6 +125,10 @@ export function BodyMesh({
           />
         </div>
       </div>
+      <span className={styles.figureCaption}>
+        <i aria-hidden="true" />
+        Данные обновлены сегодня
+      </span>
     </div>
   );
 }

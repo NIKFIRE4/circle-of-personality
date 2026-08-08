@@ -1,12 +1,10 @@
 .shell {
-  --sidebar-size: 252px;
-  --topbar-size: 72px;
+  --sidebar-size: 216px;
+  --topbar-size: 64px;
   min-height: 100svh;
   display: grid;
   grid-template-columns: var(--sidebar-size) minmax(0, 1fr);
-  background:
-    radial-gradient(circle at 78% 8%, rgba(134, 148, 103, .07), transparent 28rem),
-    #11120f;
+  background: #0d0e0c;
 }
 
 .skipLink {
@@ -15,7 +13,7 @@
   top: 12px;
   left: 12px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--paper);
   color: var(--ink);
   font-size: 12px;
@@ -37,15 +35,14 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 24px 17px 18px;
-  border-right: 1px solid rgba(245, 241, 232, .08);
-  background: rgba(15, 16, 13, .92);
-  backdrop-filter: blur(20px);
+  padding: 26px 22px 20px;
+  border-right: 1px solid rgba(238, 233, 223, .06);
+  background: #0b0c0a;
 }
 
 .sidebar :global(.brand) {
   min-width: 0;
-  padding: 0 10px;
+  padding: 0 8px;
 }
 
 .sidebar :global(.brand-word) {
@@ -57,8 +54,8 @@
 }
 
 .navLabel {
-  margin: 40px 13px 13px;
-  color: #615f58;
+  margin: 38px 8px 12px;
+  color: #5e5c56;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: .14em;
@@ -69,23 +66,21 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 2px;
 }
 
 .navItem {
   position: relative;
   min-width: 0;
-  min-height: 44px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 13px;
-  border: 1px solid transparent;
-  border-radius: 13px;
-  color: #89867e;
+  padding: 11px 8px;
+  color: #77756e;
   font-size: 12px;
   text-decoration: none;
-  transition: color .18s ease, background .18s ease, border-color .18s ease;
+  transition: color .18s ease;
 }
 
 .navItem svg {
@@ -99,36 +94,32 @@
 }
 
 .navItem:hover {
-  color: #ddd8cf;
-  background: rgba(245, 241, 232, .035);
+  color: #c9c4ba;
 }
 
 .navItem:focus-visible,
 .logoutButton:focus-visible,
 .newTaskButton:focus-visible {
-  outline: 2px solid rgba(226, 188, 123, .88);
+  outline: 2px solid rgba(216, 173, 98, .88);
   outline-offset: 3px;
 }
 
 .navItem[aria-current="page"] {
-  border-color: rgba(217, 173, 98, .14);
-  background: linear-gradient(100deg, rgba(217, 173, 98, .12), rgba(245, 241, 232, .035));
-  color: #f3eee5;
+  color: #eee9df;
 }
 
 .navItem[aria-current="page"]::before {
   content: "";
   position: absolute;
-  left: -18px;
+  left: -22px;
   width: 3px;
-  height: 28px;
+  height: 20px;
   border-radius: 999px;
-  background: #d9ad62;
-  box-shadow: 0 0 16px rgba(217, 173, 98, .34);
+  background: #d8ad62;
 }
 
 .navItem[aria-current="page"] svg {
-  color: #e4b86d;
+  color: #d8ad62;
 }
 
 .sidebarBottom {
@@ -137,18 +128,16 @@
 }
 
 .sidebarProgress {
-  margin: 0 5px 17px;
-  padding: 14px;
-  border: 1px solid rgba(245, 241, 232, .1);
-  border-radius: 15px;
-  background: rgba(245, 241, 232, .025);
+  margin: 0 8px 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(238, 233, 223, .06);
 }
 
 .progressHead {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  color: #77746d;
+  color: #6c6a63;
   font-size: 9px;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -160,18 +149,16 @@
 }
 
 .progressTrack {
-  height: 4px;
+  height: 2px;
   margin-top: 11px;
   overflow: hidden;
-  border-radius: 999px;
   background: #292a24;
 }
 
 .progressTrack span {
   display: block;
   height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #a0af82, #deb269);
+  background: #98a878;
   transition: width .25s ease;
 }
 
@@ -180,20 +167,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 8px 4px;
+  padding: 8px;
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: linear-gradient(145deg, #e2bd7b, #806645);
-  color: #17140f;
+  background: #27251f;
+  color: #d8ad62;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .profileCopy {
@@ -210,12 +197,13 @@
 }
 
 .profileCopy strong {
+  color: #d7d2c8;
   font-size: 11px;
 }
 
 .profileCopy span {
   margin-top: 2px;
-  color: #66635d;
+  color: #66645e;
   font-size: 9px;
 }
 
@@ -226,20 +214,18 @@
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 9px;
   background: transparent;
-  color: #6d6962;
+  color: #66645e;
   cursor: pointer;
 }
 
 .logoutButton:hover {
-  background: rgba(245, 241, 232, .04);
-  color: #e4ded4;
+  color: #eee9df;
 }
 
 .main {
   min-width: 0;
-  background: linear-gradient(120deg, rgba(245, 241, 232, .012), transparent 40%);
+  background: #0d0e0c;
 }
 
 .topbar {
@@ -252,8 +238,8 @@
   justify-content: space-between;
   gap: 20px;
   padding: 0 clamp(18px, 2.4vw, 34px);
-  border-bottom: 1px solid rgba(245, 241, 232, .08);
-  background: rgba(17, 18, 15, .82);
+  border-bottom: 1px solid rgba(238, 233, 223, .06);
+  background: rgba(13, 14, 12, .9);
   backdrop-filter: blur(18px);
 }
 
@@ -262,7 +248,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #6f6c64;
+  color: #66645e;
   font-size: 10px;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -270,7 +256,7 @@
 
 .breadcrumbs strong {
   overflow: hidden;
-  color: #bbb6ab;
+  color: #aaa69d;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -284,27 +270,27 @@
 }
 
 .newTaskButton {
-  min-height: 40px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 0 15px;
-  border: 1px solid rgba(217, 173, 98, .24);
-  border-radius: 12px;
-  background: rgba(217, 173, 98, .08);
-  color: #dfb973;
+  border: 0;
+  border-radius: 8px;
+  background: #d8ad62;
+  color: #19150e;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .07em;
   text-decoration: none;
   text-transform: uppercase;
+  transition: background .18s ease, transform .18s ease;
 }
 
 .newTaskButton:hover {
-  border-color: rgba(217, 173, 98, .42);
-  background: rgba(217, 173, 98, .12);
-  color: #efd195;
+  background: #e3bb77;
+  transform: translateY(-1px);
 }
 
 .content {
@@ -317,7 +303,7 @@
 
 @media (max-width: 1100px) and (min-width: 761px) {
   .shell {
-    --sidebar-size: 84px;
+    --sidebar-size: 78px;
   }
 
   .sidebar {
@@ -347,7 +333,7 @@
   }
 
   .navItem[aria-current="page"]::before {
-    left: -13px;
+    left: -12px;
   }
 
   .profileCard {
@@ -358,7 +344,7 @@
 
 @media (max-width: 760px) {
   .shell {
-    --topbar-size: 64px;
+    --topbar-size: 60px;
     display: block;
   }
 
@@ -368,11 +354,11 @@
     z-index: 30;
     width: 100%;
     height: auto;
-    min-height: calc(72px + env(safe-area-inset-bottom));
+    min-height: calc(70px + env(safe-area-inset-bottom));
     padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(245, 241, 232, .1);
+    border-top: 1px solid rgba(238, 233, 223, .07);
     border-right: 0;
-    background: rgba(18, 19, 16, .94);
+    background: rgba(11, 12, 10, .96);
   }
 
   .sidebar > :global(.brand),
@@ -389,12 +375,11 @@
   }
 
   .navItem {
-    min-height: 56px;
+    min-height: 54px;
     flex-direction: column;
     justify-content: center;
     gap: 4px;
     padding: 6px 2px;
-    border-radius: 12px;
     font-size: clamp(9px, 2.7vw, 11px);
   }
 
@@ -403,13 +388,10 @@
     max-width: 100%;
   }
 
-  .navItem[aria-current="page"] {
-    border-color: transparent;
-    background: rgba(217, 173, 98, .1);
-  }
-
   .navItem[aria-current="page"]::before {
-    display: none;
+    inset: auto auto -7px;
+    width: 22px;
+    height: 2px;
   }
 
   .topbar {
@@ -426,8 +408,8 @@
   }
 
   .newTaskButton {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     padding: 0;
   }
 
@@ -449,7 +431,8 @@
 @media (prefers-reduced-motion: reduce) {
   .skipLink,
   .navItem,
-  .progressTrack span {
+  .progressTrack span,
+  .newTaskButton {
     transition: none;
   }
 }

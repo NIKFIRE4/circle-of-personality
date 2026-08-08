@@ -31,49 +31,88 @@ export default async function OverviewPage() {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
   ]);
-  const leftMetrics = dashboard.metrics.filter((_, index) => index % 2 === 0);
-  const rightMetrics = dashboard.metrics.filter((_, index) => index % 2 === 1);
+  const configuredMetrics = dashboard.metrics.filter(
+    (metric) => metric.targetMinutes > 0,
+  );
+  const values = configuredMetrics.map((metric) => metric.value);
+  const spread = values.length ? Math.max(...values) - Math.min(...values) : 0;
+  const focus = dashboard.topCategory;
 
   return (
     <main className={styles.page}>
-      <section className={styles.hero} aria-labelledby="overview-title">
-        <header className={styles.heroHeader}>
-          <div className={styles.heroCopy}>
-            <span className="eyebrow">Живой профиль недели</span>
-            <h1 id="overview-title">Ваш контур <em>сегодня</em></h1>
-            <p>Смотрите, каким сферам достаётся ваше время, и мягко возвращайте неделю к нужному ритму.</p>
-          </div>
-          <dl className={styles.summary}>
-            <div>
-              <dt>Общий баланс</dt>
-              <dd>{dashboard.total}%</dd>
-            </div>
-            <div>
-              <dt>В фокусе</dt>
-              <dd>{dashboard.topCategory?.name ?? "Поиск ритма"}</dd>
-            </div>
-          </dl>
-        </header>
+      <header className={styles.overviewHeader}>
+        <div>
+          <span className="eyebrow">Живой профиль недели</span>
+          <h1 id="overview-title">Ваш контур сегодня</h1>
+        </div>
+        <p>
+          Смотрите, каким сферам достаётся ваше время, и мягко возвращайте
+          неделю к нужному ритму.
+        </p>
+      </header>
 
-        <div className={styles.balanceGrid}>
-          <MetricColumn metrics={leftMetrics} side="left" />
+      <section
+        aria-labelledby="overview-title"
+        aria-label="Общий баланс недели"
+        className={styles.stage}
+      >
+        <div className={styles.summaryBlock}>
+          <span>Общий баланс</span>
+          <strong className={styles.balanceScore}>
+            {dashboard.total}<small>%</small>
+          </strong>
+          <p>
+            {configuredMetrics.length
+              ? `Неделя собрана в видимый ритм. Разрыв между самой сильной и тихой сферой — ${spread} ${formatPoints(spread)}.`
+              : "Добавьте недельные ориентиры, чтобы увидеть ритм сфер."}
+          </p>
+          {dashboard.unassignedEvents > 0 ? (
+            <Link className={styles.syncLink} href="/calendar">
+              {formatUnassigned(dashboard.unassignedEvents)} ждут сферы
+            </Link>
+          ) : (
+            <span className={styles.syncStatus}>Все события распределены</span>
+          )}
+        </div>
+
+        <div className={styles.figureZone}>
           <BodyMesh
             categorySlug={
-              dashboard.topCategory?.completedMinutes
-                ? dashboard.topCategory.slug
-                : null
+              focus?.completedMinutes ? focus.slug : null
             }
             preferenceKey={`life-balance:humanoid:${user.id}`}
           />
-          <MetricColumn metrics={rightMetrics} side="right" />
         </div>
 
-        {dashboard.unassignedEvents > 0 && (
-          <Link className={styles.hint} href="/calendar">
-            <span>{formatUnassigned(dashboard.unassignedEvents)} без сферы</span>
-            <small>Распределите их в календаре, чтобы они учитывались в балансе</small>
-          </Link>
-        )}
+        <div className={styles.focusBlock}>
+          <span>В фокусе</span>
+          <strong>{focus?.name ?? "Поиск ритма"}</strong>
+          {focus ? (
+            <>
+              <small>
+                {formatDuration(focus.completedMinutes)} из {formatDuration(focus.targetMinutes)}
+              </small>
+              <p>
+                {focus.value}% недельного ориентира. Это самая наполненная
+                сфера прямо сейчас.
+              </p>
+              <Link href="/calendar?create=1">Добавить задачу в сферу</Link>
+            </>
+          ) : (
+            <p>Запланируйте время — и здесь появится текущая ведущая сфера.</p>
+          )}
+        </div>
+      </section>
+
+      <section className={styles.spheres} aria-labelledby="spheres-title">
+        <header className={styles.sectionHead}>
+          <h2 id="spheres-title">Сферы недели</h2>
+          <p>
+            Фактическое время относительно недельного ориентира. Без рейтинга —
+            только видимый ритм.
+          </p>
+        </header>
+        <SphereMetricList metrics={dashboard.metrics} />
       </section>
 
       <section className={styles.settingsSection} aria-label="Настройка сфер обзора">
@@ -99,15 +138,9 @@ function formatUnassigned(count: number): string {
   return `${count} ${noun}`;
 }
 
-function MetricColumn({
-  metrics,
-  side,
-}: {
-  metrics: BalanceMetric[];
-  side: "left" | "right";
-}) {
+function SphereMetricList({ metrics }: { metrics: BalanceMetric[] }) {
   return (
-    <ul className={`${styles.metricColumn} ${side === "left" ? styles.metricColumnLeft : styles.metricColumnRight}`}>
+    <ul className={styles.sphereList}>
       {metrics.map((metric) => (
         <Metric key={metric.id} metric={metric} />
       ))}
@@ -122,27 +155,45 @@ function Metric({ metric }: { metric: BalanceMetric }) {
     : "Без недельной цели";
 
   return (
-    <li className={styles.metricCard} style={style}>
-      <div className={styles.metricHeading}>
-        <span className={styles.metricDot} />
+    <li className={styles.sphereRow} style={style}>
+      <div className={styles.sphereName}>
+        <span className={styles.sphereDot} />
         <span>{metric.name}</span>
-        <strong>{metric.value}%</strong>
       </div>
       <div
         aria-label={`${metric.name}: ${metric.value}%`}
         aria-valuemax={100}
         aria-valuemin={0}
         aria-valuenow={metric.value}
-        className={styles.metricProgress}
+        className={styles.sphereProgress}
         role="progressbar"
       >
         <i style={{ width: `${metric.value}%` }} />
       </div>
-      <small>{timeLabel}</small>
+      <small className={styles.sphereHours}>{timeLabel}</small>
+      <strong className={styles.sphereScore}>{metric.value}%</strong>
     </li>
   );
 }
 
 function formatHours(minutes: number): string {
   return `${Math.round((minutes / 60) * 10) / 10} ч`;
+}
+
+function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+
+  if (!rest) return `${hours} ч`;
+  if (!hours) return `${rest} мин`;
+  return `${hours} ч ${rest} мин`;
+}
+
+function formatPoints(value: number): string {
+  const rules = new Intl.PluralRules("ru-RU");
+  const form = rules.select(value);
+
+  if (form === "one") return "пункт";
+  if (form === "few") return "пункта";
+  return "пунктов";
 }

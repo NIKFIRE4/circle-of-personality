@@ -11,10 +11,26 @@
   min-width: 0;
 }
 
+.header h2 {
+  margin: 0;
+  color: #eee9df;
+  font: 500 clamp(24px, 3vw, 36px)/1.08 var(--font-unbounded), sans-serif;
+  letter-spacing: -.05em;
+}
+
+.header p {
+  max-width: 560px;
+  margin: 10px 0 0;
+  color: #7b7871;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
 .list {
   display: grid;
-  gap: 9px;
-  margin-top: 18px;
+  gap: 0;
+  margin-top: 24px;
+  border-top: 1px solid rgba(238, 233, 223, .07);
 }
 
 .row {
@@ -22,10 +38,15 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 11px;
-  border: 1px solid #302e29;
-  border-radius: 11px;
-  padding: 10px;
-  background: #11110f;
+  min-height: 64px;
+  border-bottom: 1px solid rgba(238, 233, 223, .07);
+  padding: 12px 0;
+  background: transparent;
+  transition: background .18s ease;
+}
+
+.row:hover {
+  background: rgba(238, 233, 223, .018);
 }
 
 .dot {
@@ -133,12 +154,11 @@
 }
 
 .iconButton {
-  width: 29px;
-  height: 29px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  border: 1px solid #34322d;
-  border-radius: 8px;
+  border: 0;
   background: transparent;
   color: #77736d;
   cursor: pointer;
