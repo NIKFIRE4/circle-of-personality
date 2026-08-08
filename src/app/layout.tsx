@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   // indicator instead of sitting underneath it.
   viewportFit: "cover",
   // Matches --ink so the mobile browser chrome blends into the page.
-  themeColor: "#080807",
+  themeColor: "#10110e",
   colorScheme: "dark",
 };
 

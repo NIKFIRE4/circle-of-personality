@@ -36,6 +36,15 @@ export default async function OverviewPage() {
     <main className="page-content overview-focus-page">
       <section className="panel human-panel human-panel-full">
         <div className="human-stage">
+          <div className="overview-hero-copy">
+            <span className="eyebrow">Живой профиль недели</span>
+            <h1>Ваш контур<br /><em>сегодня</em></h1>
+            <p>Персонаж отражает сферу, которой вы уделяете больше всего внимания.</p>
+            <div className="overview-summary">
+              <span><small>Общий баланс</small><strong>{dashboard.total}%</strong></span>
+              <span><small>В фокусе</small><strong>{dashboard.topCategory?.name ?? "Поиск ритма"}</strong></span>
+            </div>
+          </div>
           <div className="human-ring" />
           <BodyMesh
             categorySlug={

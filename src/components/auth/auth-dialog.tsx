@@ -33,8 +33,8 @@ export function AuthDialog() {
   }
 
   return (
-    <div className="auth-overlay">
-      <section className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <aside className="auth-overlay" aria-label="Вход в личное пространство">
+      <section className="auth-dialog" aria-labelledby="auth-title">
         <div className="auth-dialog-header">
           <div>
             <span className="auth-kicker">Личное пространство</span>
@@ -71,6 +71,6 @@ export function AuthDialog() {
 
         <p className="auth-note">Входя, вы соглашаетесь с обработкой данных.</p>
       </section>
-    </div>
+    </aside>
   );
 }
