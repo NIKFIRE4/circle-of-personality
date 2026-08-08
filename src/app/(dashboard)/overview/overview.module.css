@@ -521,11 +521,106 @@
 
 @media (max-width: 760px) {
   .page {
-    padding: 26px 16px calc(104px + env(safe-area-inset-bottom));
+    padding: 16px 16px calc(104px + env(safe-area-inset-bottom));
+  }
+
+  .overviewHeader {
+    margin-bottom: 12px;
+  }
+
+  .overviewHeader :global(.eyebrow),
+  .overviewHeader > p {
+    display: none;
+  }
+
+  .overviewHeader h1 {
+    max-width: 100%;
+    margin: 0;
+    font-size: clamp(24px, 6.7vw, 34px);
+    line-height: 1.05;
+    letter-spacing: -.05em;
+    white-space: nowrap;
   }
 
   .stage {
-    padding: 26px 20px;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "figure"
+      "focus";
+    gap: 18px;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .summaryBlock {
+    position: absolute;
+    z-index: 5;
+    top: 20px;
+    left: 20px;
+    width: 112px;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .summaryBlock > span:first-child {
+    font-size: 10px;
+  }
+
+  .balanceScore {
+    gap: 4px;
+    margin-top: 4px;
+    font-size: clamp(48px, 14vw, 62px);
+  }
+
+  .balanceScore small {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .summaryBlock p,
+  .summaryBlock .syncLink,
+  .summaryBlock .syncStatus {
+    display: none;
+  }
+
+  .figureZone,
+  .visual {
+    min-height: clamp(370px, 58svh, 480px);
+  }
+
+  .figure {
+    inset: 42px 2% 4px;
+  }
+
+  .selector {
+    right: 0;
+    left: auto;
+    max-width: 164px;
+  }
+
+  .selector > span:first-child {
+    display: none;
+  }
+
+  .selectorControl {
+    max-width: 100%;
+  }
+
+  .selector select {
+    width: 100%;
+    min-height: 42px;
+    font-size: 13px;
+  }
+
+  .focusBlock {
+    grid-area: focus;
+    padding: 18px 4px 6px;
+    border-top: 1px solid rgba(238, 233, 223, .07);
+  }
+
+  .focusBlock p {
+    display: none;
   }
 
   .sectionHead {
@@ -545,52 +640,23 @@
 
 @media (max-width: 560px) {
   .overviewHeader {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   .overviewHeader h1 {
-    max-width: 100%;
-    font-size: clamp(31px, 10.4vw, 46px);
-    letter-spacing: -.055em;
-    text-wrap: wrap;
-  }
-
-  .overviewHeader > p {
-    font-size: 13px;
+    font-size: clamp(23px, 7.2vw, 30px);
   }
 
   .stage {
-    min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "summary"
-      "figure"
-      "focus";
-    gap: 28px;
-    border-radius: 20px;
+    gap: 14px;
   }
 
-  .summaryBlock,
   .focusBlock {
     padding-top: 0;
   }
 
-  .balanceScore {
-    font-size: clamp(72px, 24vw, 102px);
-  }
-
-  .summaryBlock p,
-  .focusBlock p {
-    max-width: 34ch;
-  }
-
-  .figureZone,
-  .visual {
-    min-height: 360px;
-  }
-
   .figure {
-    inset: 44px 4% 12px;
+    inset: 40px 0 2px;
   }
 
   .ring {
@@ -598,23 +664,17 @@
   }
 
   .selector {
-    right: 0;
-    left: 0;
-    justify-content: flex-end;
-  }
-
-  .selector > span:first-child {
-    display: none;
+    max-width: 158px;
   }
 
   .selectorControl {
-    max-width: min(100%, 220px);
+    max-width: 100%;
   }
 
   .selector select {
     width: 100%;
-    min-height: 44px;
-    font-size: 16px;
+    min-height: 40px;
+    font-size: 12px;
   }
 
   .figureCaption {
@@ -656,11 +716,29 @@
   }
 
   .overviewHeader h1 {
-    font-size: 31px;
+    font-size: 22px;
   }
 
   .stage {
     padding-inline: 16px;
+  }
+
+  .summaryBlock {
+    left: 16px;
+    width: 96px;
+  }
+
+  .balanceScore {
+    font-size: 46px;
+  }
+
+  .selector {
+    max-width: 145px;
+  }
+
+  .figureZone,
+  .visual {
+    min-height: clamp(340px, 57svh, 420px);
   }
 }
 
