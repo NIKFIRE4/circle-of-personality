@@ -217,8 +217,14 @@ button { color: inherit; }
 .calendar-page { width:100%;max-width:none;min-height:calc(100svh - 78px);display:flex;flex-direction:column; }
 .calendar-page>.page-heading { flex:0 0 auto; }
 .calendar-layout { display:grid;grid-template-columns:minmax(0,1fr);flex:1;min-height:720px; }
-.calendar-panel { width:100%;min-height:0;padding:17px;display:flex;flex-direction:column; }
-.calendar-toolbar { display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;gap:15px; }.calendar-title{font:500 17px var(--font-unbounded)}.calendar-tools{display:flex;gap:7px}.small-button{border:1px solid #302f2a;background:#141412;color:#9a968d;border-radius:9px;padding:8px 11px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer}.small-button.accent{color:#e1b968;border-color:rgba(212,168,84,.36);background:rgba(212,168,84,.08)}
+.calendar-panel { position:relative;width:100%;min-height:0;padding:17px;display:flex;flex-direction:column; }
+.calendar-toolbar { display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;gap:15px; }
+.calendar-period-navigation{display:grid;grid-template-columns:34px minmax(0,auto) 34px;align-items:center;gap:8px}
+.calendar-title{min-width:0;margin:0;font:500 17px var(--font-unbounded);white-space:nowrap}
+.calendar-tools{display:flex;align-items:center;gap:7px}
+.small-button{min-width:0;border:1px solid #302f2a;background:#141412;color:#9a968d;border-radius:9px;padding:8px 11px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.calendar-arrow-button{width:34px;height:34px;padding:0}
+.small-button.accent{color:#e1b968;border-color:rgba(212,168,84,.36);background:rgba(212,168,84,.08)}
 .voice-fab { position:fixed;right:32px;bottom:28px;z-index:12;border:0;border-radius:999px;padding:14px 19px 14px 14px;background:linear-gradient(135deg,#f1793f,#c84c1e);color:#fff;display:flex;align-items:center;gap:10px;box-shadow:0 14px 45px rgba(243,106,45,.26);cursor:pointer;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.voice-fab i{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.16);font-style:normal}
 .fc{--fc-border-color:#292824;--fc-page-bg-color:transparent;--fc-neutral-bg-color:#161512;--fc-list-event-hover-bg-color:#1b1a17;font-size:11px;color:#aaa69d}.fc .fc-scrollgrid{border-radius:10px;overflow:hidden}.fc-theme-standard td,.fc-theme-standard th{border-color:#292824}.fc .fc-col-header-cell-cushion{padding:10px;color:#67645e;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.fc .fc-timegrid-slot-label-cushion{font-size:8px;color:#5c5953}.fc .fc-timegrid-slot{height:42px}.calendar-panel .fc .fc-day-today{background:rgba(212,168,84,.09)!important}.calendar-panel .fc .fc-timegrid-col.fc-day-today{box-shadow:inset 1px 0 rgba(212,168,84,.22),inset -1px 0 rgba(212,168,84,.22)}.calendar-panel .fc .fc-col-header-cell.fc-day-today{background:rgba(243,106,45,.14)!important;box-shadow:inset 0 -2px var(--orange)}.calendar-panel .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion{color:#f2b56f}.fc .fc-timegrid-now-indicator-line{border-color:var(--orange)}.fc .fc-event{border:0;border-radius:5px;padding:2px 4px;box-shadow:none}.fc .fc-event-main{color:#f5f0e6}.fc .fc-daygrid-day-number{color:#8c887f;padding:7px}.calendar-panel .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number{margin:4px;border-radius:999px;background:var(--gold);color:#17120a}
 
@@ -430,26 +436,42 @@ button { color: inherit; }
 @media(max-width:1050px){.overview-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.cards-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.landing-preview{grid-template-columns:1fr;padding:7vh 25px}.preview-dashboard{display:none}.landing-header,.landing-footer{padding:22px}.landing-status,.landing-footer span{display:none}.auth-dialog{padding:24px}.app-shell{display:block}.sidebar{position:fixed;left:0;right:0;bottom:0;top:auto;height:68px;padding:8px 12px;border-right:0;border-top:1px solid var(--line);flex-direction:row}.sidebar>.brand,.nav-label,.sidebar-bottom{display:none}.nav-list{width:100%;flex-direction:row;justify-content:space-around}.nav-item{flex-direction:column;gap:3px;padding:8px;font-size:8px}.nav-item.active::before{left:50%;top:-8px;width:24px;height:2px;transform:translateX(-50%)}.topbar{height:64px;padding:0 18px}.new-task-button span{display:none}.page-content{padding:23px 16px 90px}.calendar-page{height:calc(100svh - 64px);min-height:0;overflow:hidden}.calendar-layout{min-height:0}.page-heading{align-items:flex-start;flex-direction:column}.overview-grid,.bottom-grid,.side-stack,.cards-grid,.insights-grid,.settings-grid{grid-template-columns:1fr}.human-panel{min-height:480px}.human-selector{top:-43px;right:16px}.human-selector>span:first-child{display:none}.human-selector select{min-width:112px}.human-figure{inset:24px 16% 45px}.metric-badge{min-width:96px}.metric-health{left:2%}.metric-growth{right:2%}.metric-work{left:1%}.metric-relations{right:1%}.calendar-panel{padding:9px}.calendar-toolbar{align-items:flex-start;flex-direction:column}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.voice-fab{right:17px;bottom:82px}.settings-grid{grid-template-columns:1fr}}
 @media(max-width:760px){
-  /* Give the grid every pixel the chrome does not need. The height subtracts
-     the 64px topbar and the 68px fixed bottom navigation, which the previous
-     rule ignored - the last hour of the day sat underneath the nav bar. */
-  .calendar-page{height:calc(100svh - 64px - 68px - env(safe-area-inset-bottom));padding:8px 8px 0}
+  /* Calendar apps on phones dedicate the screen to the current schedule. The
+     calendar has its own navigation and create action, so the dashboard header
+     is redundant here and would cost a full row of usable space. */
+  .app-main:has(>.calendar-page)>.topbar{display:none}
+  .calendar-page{height:calc(100svh - 68px - env(safe-area-inset-bottom));padding:0;overflow:hidden}
   .calendar-page>.page-heading{display:none}
-  .calendar-panel{padding:8px 6px 4px}
-  .calendar-toolbar{margin-bottom:9px;gap:8px}
-  .calendar-title{font-size:14px}
-  .calendar-page .calendar-tools{width:100%;flex-wrap:wrap;gap:6px}
-  .calendar-view-switch{display:flex;gap:6px;margin-left:auto}
-  .calendar-panel .fc .fc-col-header-cell-cushion{padding:9px 2px;font-size:10px;letter-spacing:.02em}
+  .calendar-layout{height:100%}
+  .calendar-panel{height:100%;padding:0;border:0;border-radius:0;background:#12130f;box-shadow:none}
+  .calendar-toolbar{display:grid;grid-template-columns:1fr;margin:0;padding:8px 10px 10px;gap:8px;background:rgba(18,19,15,.96)}
+  .calendar-period-navigation{width:100%;grid-template-columns:48px minmax(0,1fr) 48px;gap:7px}
+  .calendar-title{overflow:hidden;font-size:15px;text-align:center;text-overflow:ellipsis}
+  .calendar-arrow-button{width:48px;height:44px;border-color:transparent;background:rgba(245,241,232,.035)}
+  .calendar-page .calendar-tools{display:grid;width:100%;grid-template-columns:auto minmax(0,1fr) 48px;gap:7px}
+  .calendar-today-button{padding-inline:13px}
+  .calendar-view-switch{display:grid;width:100%;grid-template-columns:1fr 1.45fr;gap:3px;margin:0;padding:3px;border:1px solid rgba(245,241,232,.09);border-radius:12px;background:rgba(8,9,7,.42)}
+  .calendar-view-switch .small-button{width:100%;min-height:44px;border:0;background:transparent;padding-inline:8px}
+  .calendar-view-switch .small-button.accent{background:rgba(217,173,98,.14);box-shadow:inset 0 0 0 1px rgba(217,173,98,.18)}
+  .calendar-week-view{display:none!important}
+  .calendar-create-button{width:48px;padding:0}
+  .calendar-create-button span{display:none}
+  .calendar-panel .fc .fc-col-header-cell-cushion{padding:11px 2px;font-size:12px;letter-spacing:.02em}
   /* 52px per half-hour keeps a 30-minute drag comfortably above the ~44px
      minimum touch target, and the day view has the width to afford it. */
   .calendar-panel .fc .fc-timegrid-slot{height:52px}
-  .calendar-panel .fc .fc-timegrid-slot-label-cushion{font-size:11px}
-  .calendar-panel .fc{font-size:13px}
-  .calendar-panel .fc .fc-event{padding:3px 5px}
+  .calendar-panel .fc .fc-timegrid-slot-label-cushion{padding-inline:7px;font-size:12px}
+  .calendar-panel .fc{font-size:14px}
+  .calendar-panel .fc .fc-scrollgrid{border:0;border-radius:0}
+  .calendar-panel .fc .fc-event{padding:4px 6px;border-radius:7px}
+  .calendar-panel .fc .fc-event-time{font-size:12px;font-weight:700}
+  .calendar-panel .fc .fc-event-title{font-size:13px;line-height:1.25}
   .calendar-panel .fc .fc-daygrid-day-number{font-size:12px}
   /* The selection mirror is the only feedback that a drag registered. */
   .calendar-panel .fc .fc-highlight{background:rgba(212,168,84,.26)}
+  .calendar-page .voice-fab{right:14px;bottom:calc(78px + env(safe-area-inset-bottom));width:52px;height:52px;padding:0}
+  .calendar-page .voice-fab span{display:none}
+  .calendar-page .voice-fab i{width:100%;height:100%;background:transparent}
 }
 @media(max-width:760px){.overview-focus-page{height:auto;min-height:calc(100svh - 64px);padding:12px 12px 86px}.human-panel-full{height:auto;min-height:0}.human-panel-full .human-stage{position:relative;inset:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;min-height:0;padding:440px 11px 15px}.human-panel-full .human-figure{top:56px;right:14%;bottom:auto;left:14%;height:345px}.human-panel-full .human-ring{top:205px;width:300px;height:300px}.human-selector{top:15px;right:15px}.human-selector select{max-width:min(56vw,196px);text-overflow:ellipsis}.metric-column{position:static;width:auto;min-width:0;justify-content:flex-start;gap:9px}.metric-column-left,.metric-column-right{right:auto;left:auto}.metric-badge{min-width:0;padding:11px 10px 10px}.metric-heading{grid-template-columns:6px minmax(0,1fr) auto;gap:6px}.metric-heading>span:not(.metric-dot){font-size:7px}.metric-heading strong{font-size:12px}.metric-connector{display:none}.overview-hint{position:static;grid-column:1/-1;order:-1;max-width:none;transform:none}}
 

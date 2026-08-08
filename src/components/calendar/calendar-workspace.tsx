@@ -64,14 +64,15 @@ type EventDraft = VoiceTaskDraft & {
 
 type VisibleRange = { start: Date; end: Date };
 
-type TimeGridView = "timeGridDay" | "timeGridWeek";
+type CalendarView = "timeGridDay" | "timeGridWeek" | "listWeek";
 
 const MOBILE_QUERY = "(max-width: 760px)";
 
 /**
  * A seven-column week grid leaves roughly 45px per day on a phone, which is too
  * narrow to read an event title or aim at a time slot. Mobile therefore opens
- * on a single day and can be switched to the week manually.
+ * as a readable agenda and keeps the single-day grid one tap away for spatial
+ * planning and range selection.
  */
 function useIsMobile(): boolean {
   return useSyncExternalStore(
@@ -107,7 +108,7 @@ export function CalendarWorkspace({
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
-  const [view, setView] = useState<TimeGridView>("timeGridWeek");
+  const [view, setView] = useState<CalendarView>("timeGridWeek");
   // Once the view is picked by hand, crossing the breakpoint must not undo it.
   const viewPickedByUserRef = useRef(false);
   const [loadError, setLoadError] = useState("");
@@ -166,12 +167,12 @@ export function CalendarWorkspace({
 
   useEffect(() => {
     if (viewPickedByUserRef.current) return;
-    const responsiveView: TimeGridView = isMobile ? "timeGridDay" : "timeGridWeek";
+    const responsiveView: CalendarView = isMobile ? "listWeek" : "timeGridWeek";
     setView(responsiveView);
     calendarRef.current?.getApi().changeView(responsiveView);
   }, [isMobile]);
 
-  function selectView(next: TimeGridView) {
+  function selectView(next: CalendarView) {
     viewPickedByUserRef.current = true;
     setView(next);
     calendarRef.current?.getApi().changeView(next);
@@ -366,11 +367,13 @@ export function CalendarWorkspace({
       <div className="calendar-layout">
         <section className="panel calendar-panel">
           <div className="calendar-toolbar">
-            <div className="calendar-title">{viewTitle || "Календарь"}</div>
+            <div className="calendar-period-navigation">
+              <button className="small-button calendar-arrow-button" onClick={() => api()?.prev()} aria-label="Предыдущий период"><ChevronLeft size={18} /></button>
+              <h2 className="calendar-title" aria-live="polite">{viewTitle || "Календарь"}</h2>
+              <button className="small-button calendar-arrow-button" onClick={() => api()?.next()} aria-label="Следующий период"><ChevronRight size={18} /></button>
+            </div>
             <div className="calendar-tools">
-              <button className="small-button" onClick={() => api()?.prev()} aria-label="Назад"><ChevronLeft size={13} /></button>
-              <button className="small-button" onClick={() => api()?.today()}>Сегодня</button>
-              <button className="small-button" onClick={() => api()?.next()} aria-label="Вперёд"><ChevronRight size={13} /></button>
+              <button className="small-button calendar-today-button" onClick={() => api()?.today()}>Сегодня</button>
               <span className="calendar-view-switch" role="group" aria-label="Масштаб календаря">
                 <button
                   className={`small-button ${view === "timeGridDay" ? "accent" : ""}`}
@@ -378,25 +381,34 @@ export function CalendarWorkspace({
                   aria-pressed={view === "timeGridDay"}
                 >День</button>
                 <button
-                  className={`small-button ${view === "timeGridWeek" ? "accent" : ""}`}
+                  className={`small-button calendar-week-view ${view === "timeGridWeek" ? "accent" : ""}`}
                   onClick={() => selectView("timeGridWeek")}
                   aria-pressed={view === "timeGridWeek"}
                 >Неделя</button>
+                <button
+                  className={`small-button calendar-list-view ${view === "listWeek" ? "accent" : ""}`}
+                  onClick={() => selectView("listWeek")}
+                  aria-pressed={view === "listWeek"}
+                >Расписание</button>
               </span>
-              <button className="small-button accent" onClick={() => setEventModal(defaultDraft(timeZone))}><CalendarPlus size={12} /> Событие</button>
+              <button className="small-button accent calendar-create-button" onClick={() => setEventModal(defaultDraft(timeZone))}>
+                <CalendarPlus size={17} /> <span>Событие</span>
+              </button>
             </div>
           </div>
-          {(loadError || actionError) && (
-            <div className={`${styles.notice} ${styles.error}`} role="alert">
-              <span>{actionError || loadError}</span>
-              {loadError && <button className="small-button" onClick={retryLoading}>Повторить</button>}
-            </div>
-          )}
-          {actionSuccess && <div className={`${styles.notice} ${styles.success}`} role="status">{actionSuccess}</div>}
-          {loading && <div className={styles.notice}>Загружаем события выбранного периода…</div>}
-          {!loading && !loadError && !events.length && <div className={`${styles.notice} ${styles.empty}`}>В этом периоде событий нет. Выберите время в календаре, чтобы добавить первое.</div>}
+          <div className={styles.noticeStack}>
+            {(loadError || actionError) && (
+              <div className={`${styles.notice} ${styles.error}`} role="alert">
+                <span>{actionError || loadError}</span>
+                {loadError && <button className="small-button" onClick={retryLoading}>Повторить</button>}
+              </div>
+            )}
+            {actionSuccess && <div className={`${styles.notice} ${styles.success}`} role="status">{actionSuccess}</div>}
+            {loading && <div className={styles.notice}>Загружаем события выбранного периода…</div>}
+            {!loading && !loadError && !events.length && view !== "listWeek" && <div className={`${styles.notice} ${styles.empty}`}>В этом периоде событий нет. Коснитесь времени, чтобы добавить первое.</div>}
+          </div>
           <div
-            className={`${styles.calendarFrame} ${view === "timeGridWeek" ? styles.dayScroll : ""}`}
+            className={`${styles.calendarFrame} ${view === "timeGridWeek" ? styles.dayScroll : ""} ${view === "listWeek" ? styles.listView : ""}`}
           >
             <FullCalendar
               ref={calendarRef}
@@ -413,6 +425,7 @@ export function CalendarWorkspace({
               headerToolbar={false}
               height="100%"
               expandRows
+              stickyHeaderDates
               allDaySlot
               nowIndicator
               editable
@@ -428,6 +441,7 @@ export function CalendarWorkspace({
               firstDay={1}
               slotMinTime="06:00:00"
               slotMaxTime="23:00:00"
+              noEventsContent="На ближайшие семь дней событий нет"
               events={calendarEvents}
               datesSet={handleDatesSet}
               dateClick={openForDate}
@@ -444,7 +458,7 @@ export function CalendarWorkspace({
         onClick={() => { setActionSuccess(""); setVoiceOpen(true); }}
         aria-haspopup="dialog"
         aria-expanded={voiceOpen}
-      ><i><Sparkles size={15} /></i> Умная задача</button>
+      ><i><Sparkles size={15} /></i><span>Умная задача</span></button>
       {eventModal && <EventDialog draft={eventModal} categories={categories} onClose={closeEventDialog} onSave={saveEvent} onDelete={deleteEvent} />}
       {voiceOpen && <VoiceTaskDialog categories={categories} timeZone={timeZone} onClose={() => setVoiceOpen(false)} onSave={saveEvent} />}
     </>

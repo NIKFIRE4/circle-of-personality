@@ -8,6 +8,14 @@
   font-size: 10px;
 }
 
+.noticeStack {
+  flex: 0 0 auto;
+}
+
+.noticeStack:empty {
+  display: none;
+}
+
 .error {
   display: flex;
   align-items: center;
@@ -50,6 +58,65 @@
   min-width: 660px;
 }
 
+.listView :global(.fc-list) {
+  border: 0;
+}
+
+.listView :global(.fc-list-table) {
+  border-collapse: separate;
+  border-spacing: 0 7px;
+}
+
+.listView :global(.fc-list-day-cushion) {
+  padding: 11px 14px;
+  background: #1c1c18;
+  color: #d7d1c6;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.listView :global(.fc-list-event) {
+  min-height: 62px;
+  background: rgba(255, 255, 255, .018);
+}
+
+.listView :global(.fc-list-event:hover td) {
+  background: rgba(217, 173, 98, .06);
+}
+
+.listView :global(.fc-list-event td) {
+  padding-block: 13px;
+  border-color: rgba(245, 241, 232, .08);
+}
+
+.listView :global(.fc-list-event-time) {
+  width: 78px;
+  color: #a8a399;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.listView :global(.fc-list-event-dot) {
+  width: 10px;
+  height: 10px;
+  border-width: 5px;
+}
+
+.listView :global(.fc-list-event-title) {
+  color: #eee9df;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.listView :global(.fc-list-empty) {
+  background: transparent;
+}
+
+.listView :global(.fc-list-empty-cushion) {
+  color: #8c887f;
+  font-size: 13px;
+}
+
 .sourceNote {
   margin: 0 0 15px;
   border: 1px solid rgba(212, 168, 84, .25);
@@ -88,4 +155,64 @@
 
 .cancelled {
   opacity: .62;
+}
+
+@media (max-width: 760px) {
+  .noticeStack {
+    position: absolute;
+    z-index: 6;
+    top: 112px;
+    right: 10px;
+    left: 10px;
+    pointer-events: none;
+  }
+
+  .noticeStack .notice {
+    margin-bottom: 7px;
+    border-color: rgba(245, 241, 232, .16);
+    background: rgba(20, 20, 17, .94);
+    box-shadow: 0 14px 45px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(16px);
+    color: #bbb5aa;
+    font-size: 12px;
+    line-height: 1.45;
+    pointer-events: auto;
+  }
+
+  .calendarFrame {
+    border-top: 1px solid rgba(245, 241, 232, .08);
+  }
+
+  .listView :global(.fc-list-table) {
+    border-spacing: 0 8px;
+  }
+
+  .listView :global(.fc-list-day-cushion) {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    padding: 12px 13px;
+    background: rgba(25, 26, 21, .96);
+    font-size: 13px;
+    backdrop-filter: blur(14px);
+  }
+
+  .listView :global(.fc-list-event) {
+    min-height: 68px;
+  }
+
+  .listView :global(.fc-list-event td) {
+    padding-block: 16px;
+  }
+
+  .listView :global(.fc-list-event-time) {
+    width: 76px;
+    padding-left: 12px;
+    font-size: 13px;
+  }
+
+  .listView :global(.fc-list-event-title) {
+    padding-right: 12px;
+    font-size: 15px;
+  }
 }
