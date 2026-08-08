@@ -24,11 +24,12 @@ import {
   zonedInputToIso,
 } from "@/lib/calendar-time";
 import { useSubmitGuard } from "@/lib/use-submit-guard";
+import type { GoalDto } from "@/lib/goals";
 
 import styles from "./calendar-workspace.module.css";
 
 type EventStatus = "PLANNED" | "COMPLETED" | "CANCELLED";
-type EventSource = "MANUAL" | "VOICE" | "GOOGLE" | "APPLE";
+type EventSource = "MANUAL" | "VOICE" | "GOAL" | "GOOGLE" | "APPLE";
 
 type Category = VoiceTaskCategory & {
   color: string;
@@ -48,6 +49,10 @@ type ApiEvent = {
   calendarConnectionId: string | null;
   categoryId: string | null;
   category: { id: string; name: string; color: string } | null;
+  goalId: string | null;
+  goalTaskId: string | null;
+  goal: { id: string; title: string; status: GoalDto["status"] } | null;
+  goalTask: { id: string; title: string; kind: "HABIT" | "MILESTONE" } | null;
 };
 
 type EventDraft = VoiceTaskDraft & {
@@ -60,6 +65,10 @@ type EventDraft = VoiceTaskDraft & {
   source?: EventSource;
   calendarConnectionId?: string | null;
   categoryName?: string;
+  goalId?: string;
+  goalTaskId?: string;
+  goalTitle?: string;
+  goalTaskTitle?: string;
 };
 
 type VisibleRange = { start: Date; end: Date };
@@ -91,9 +100,13 @@ function useIsMobile(): boolean {
 export function CalendarWorkspace({
   timeZone,
   initialCreate = false,
+  initialGoalId,
+  initialGoalTaskId,
 }: {
   timeZone: string;
   initialCreate?: boolean;
+  initialGoalId?: string;
+  initialGoalTaskId?: string;
 }) {
   const router = useRouter();
   const [today] = useState(() => new Date());
@@ -102,9 +115,10 @@ export function CalendarWorkspace({
   const feedSyncStartedRef = useRef(false);
   const [events, setEvents] = useState<ApiEvent[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [goals, setGoals] = useState<GoalDto[]>([]);
   const [visibleRange, setVisibleRange] = useState<VisibleRange | null>(null);
   const [viewTitle, setViewTitle] = useState("");
-  const [eventModal, setEventModal] = useState<EventDraft | null>(() => initialCreate ? defaultDraft(timeZone) : null);
+  const [eventModal, setEventModal] = useState<EventDraft | null>(() => initialCreate ? defaultDraft(timeZone, initialGoalId, initialGoalTaskId) : null);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -149,15 +163,28 @@ export function CalendarWorkspace({
     }
   }, []);
 
+  const loadGoals = useCallback(async () => {
+    try {
+      const response = await fetch("/api/goals?status=ACTIVE");
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(apiMessage(body, "Не удалось загрузить цели"));
+      if (!Array.isArray(body.goals)) throw new Error("Сервер вернул некорректный список целей");
+      setGoals(body.goals);
+    } catch (caught) {
+      setLoadError(errorMessage(caught, "Не удалось загрузить цели"));
+    }
+  }, []);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadCategories();
+      void loadGoals();
     }, 0);
     return () => {
       window.clearTimeout(timer);
       rangeAbortRef.current?.abort();
     };
-  }, [loadCategories]);
+  }, [loadCategories, loadGoals]);
 
   useEffect(() => {
     if (!actionSuccess) return;
@@ -246,6 +273,8 @@ export function CalendarWorkspace({
     const common = importedEvent
       ? {
           categoryId: draft.categoryId || null,
+          goalId: draft.goalId || null,
+          goalTaskId: draft.goalTaskId || null,
           status: draft.status ?? "PLANNED",
           includeInBalance: draft.includeInBalance ?? true,
         }
@@ -256,6 +285,8 @@ export function CalendarWorkspace({
           startAt: zonedInputToIso(draft.startAt, timeZone),
           endAt: zonedInputToIso(draft.endAt, timeZone),
           categoryId: draft.categoryId || null,
+          goalId: draft.goalId || null,
+          goalTaskId: draft.goalTaskId || null,
           allDay,
           includeInBalance: draft.includeInBalance ?? true,
           status: draft.status ?? "PLANNED",
@@ -281,6 +312,7 @@ export function CalendarWorkspace({
 
     const saved = body.event as ApiEvent;
     setEvents((current) => upsertVisibleEvent(current, saved, visibleRange));
+    void loadGoals();
     router.refresh();
     setEventModal(null);
     setVoiceOpen(false);
@@ -304,6 +336,7 @@ export function CalendarWorkspace({
       throw new Error(apiMessage(body, "Не удалось удалить событие"));
     }
     setEvents((current) => current.filter((item) => item.id !== event.id));
+    void loadGoals();
     router.refresh();
     setEventModal(null);
     clearCreateQuery();
@@ -357,6 +390,7 @@ export function CalendarWorkspace({
 
   function retryLoading() {
     void loadCategories();
+    void loadGoals();
     if (visibleRange) void loadRange(visibleRange.start, visibleRange.end);
   }
 
@@ -459,7 +493,7 @@ export function CalendarWorkspace({
         aria-haspopup="dialog"
         aria-expanded={voiceOpen}
       ><i><Sparkles size={15} /></i><span>Умная задача</span></button>
-      {eventModal && <EventDialog draft={eventModal} categories={categories} onClose={closeEventDialog} onSave={saveEvent} onDelete={deleteEvent} />}
+      {eventModal && <EventDialog draft={eventModal} categories={categories} goals={goals} onClose={closeEventDialog} onSave={saveEvent} onDelete={deleteEvent} />}
       {voiceOpen && <VoiceTaskDialog categories={categories} timeZone={timeZone} onClose={() => setVoiceOpen(false)} onSave={saveEvent} />}
     </>
   );
@@ -468,22 +502,32 @@ export function CalendarWorkspace({
 function EventDialog({
   draft,
   categories,
+  goals,
   onClose,
   onSave,
   onDelete,
 }: {
   draft: EventDraft;
   categories: Category[];
+  goals: GoalDto[];
   onClose: () => void;
   onSave: (draft: EventDraft) => Promise<void>;
   onDelete: (draft: EventDraft) => Promise<void>;
 }) {
   const [allDay, setAllDay] = useState(draft.allDay ?? false);
   const [includeInBalance, setIncludeInBalance] = useState(draft.includeInBalance ?? true);
+  const [selectedGoalId, setSelectedGoalId] = useState(draft.goalId ?? "");
+  const [selectedTaskId, setSelectedTaskId] = useState(draft.goalTaskId ?? "");
+  const [title, setTitle] = useState(draft.title);
   const [error, setError] = useState("");
   const { pending, guard } = useSubmitGuard();
   const importedEvent = isImportedEvent(draft);
   const sourceName = calendarSourceName(draft);
+  const selectedGoal = goals.find((goal) => goal.id === selectedGoalId);
+  const availableTasks = selectedGoal?.tasks.filter((task) => task.status === "ACTIVE" || task.id === selectedTaskId) ?? [];
+  const suggestedTitle = !draft.id && draft.goalTaskId
+    ? goals.flatMap((goal) => goal.tasks).find((item) => item.id === draft.goalTaskId)?.title ?? ""
+    : "";
 
   function action(formData: FormData) {
     setError("");
@@ -491,12 +535,14 @@ function EventDialog({
       try {
         await onSave({
           ...draft,
-          title: String(formData.get("title") ?? draft.title),
+          title: String(formData.get("title") ?? (title || suggestedTitle)),
           description: String(formData.get("description") ?? draft.description ?? ""),
           location: String(formData.get("location") ?? draft.location ?? ""),
           startAt: String(formData.get("startAt") ?? draft.startAt),
           endAt: String(formData.get("endAt") ?? draft.endAt),
           categoryId: String(formData.get("categoryId") || ""),
+          goalId: selectedGoalId,
+          goalTaskId: selectedTaskId,
           allDay,
           includeInBalance,
           status: String(formData.get("status") || "PLANNED") as EventStatus,
@@ -525,10 +571,10 @@ function EventDialog({
           <div><span className="eyebrow">Планирование</span><h2 id="event-dialog-title">{draft.id ? "Изменить событие" : "Новое событие"}</h2></div>
           <button className="modal-close" onClick={onClose} aria-label="Закрыть"><X size={15} /></button>
         </div>
-        {importedEvent && <p className={styles.sourceNote}>Событие импортировано из {sourceName}. Здесь можно изменить только сферу и локальный статус. Название, время и удаление управляются в исходном календаре.</p>}
+        {importedEvent && <p className={styles.sourceNote}>Событие импортировано из {sourceName}. Здесь можно изменить сферу, связь с целью и локальный статус. Название, время и удаление управляются в исходном календаре.</p>}
         <form action={action}>
           <div className="form-grid">
-            <label className="field full"><span className="field-label">Название</span><input name="title" defaultValue={draft.title} placeholder="Например, танцевальная практика" maxLength={200} disabled={importedEvent} required /></label>
+            <label className="field full"><span className="field-label">Название</span><input name="title" value={title || suggestedTitle} onChange={(event) => setTitle(event.target.value)} placeholder="Например, танцевальная практика" maxLength={200} disabled={importedEvent} required /></label>
             <label className="field full"><span className="field-label">Описание</span><textarea className={styles.description} name="description" defaultValue={draft.description ?? ""} maxLength={10_000} disabled={importedEvent} /></label>
             <label className="field full"><span className="field-label">Место</span><input name="location" defaultValue={draft.location ?? ""} maxLength={500} disabled={importedEvent} /></label>
             <label className="field full"><span className="field-label">Формат</span><span className={styles.checkbox}><input type="checkbox" checked={allDay} onChange={(event) => setAllDay(event.target.checked)} disabled={importedEvent} /> Весь день</span></label>
@@ -536,6 +582,8 @@ function EventDialog({
             <label className="field"><span className="field-label">Завершение</span><input key={`end-${allDay}`} name="endAt" type={allDay ? "date" : "datetime-local"} defaultValue={endInputDefault(draft.startAt, draft.endAt, allDay)} disabled={importedEvent} required /></label>
             <label className="field"><span className="field-label">Сфера жизни</span><select name="categoryId" defaultValue={draft.categoryId ?? ""}><option value="">Без категории</option>{draft.categoryId && !categories.some((category) => category.id === draft.categoryId) && <option value={draft.categoryId}>{draft.categoryName || "Архивная сфера"} · архив</option>}{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
             <label className="field"><span className="field-label">Статус</span><select name="status" defaultValue={draft.status ?? "PLANNED"}><option value="PLANNED">Запланировано</option><option value="COMPLETED">Выполнено</option><option value="CANCELLED">Отменено</option></select></label>
+            <label className="field"><span className="field-label">Цель</span><select value={selectedGoalId} onChange={(event) => { setSelectedGoalId(event.target.value); setSelectedTaskId(""); }}><option value="">Без цели</option>{draft.goalId && !goals.some((goal) => goal.id === draft.goalId) && <option value={draft.goalId}>{draft.goalTitle || "Неактивная цель"}</option>}{goals.map((goal) => <option key={goal.id} value={goal.id}>{goal.title}</option>)}</select></label>
+            <label className="field"><span className="field-label">Шаг цели</span><select value={selectedTaskId} onChange={(event) => { const nextId = event.target.value; setSelectedTaskId(nextId); const task = availableTasks.find((item) => item.id === nextId); if (task && !title.trim()) setTitle(task.title); }} disabled={!selectedGoalId}><option value="">Без конкретного шага</option>{draft.goalTaskId && !availableTasks.some((task) => task.id === draft.goalTaskId) && <option value={draft.goalTaskId}>{draft.goalTaskTitle || "Завершённый шаг"}</option>}{availableTasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}</select></label>
             <label className="field full"><span className="field-label">Колесо баланса</span><span className={styles.checkbox}><input type="checkbox" checked={includeInBalance} onChange={(event) => setIncludeInBalance(event.target.checked)} /> Учитывать эту задачу в колесе баланса</span></label>
           </div>
           <div className="auth-error" role="alert">{error}</div>
@@ -569,6 +617,10 @@ function draftFromEvent(event: ApiEvent, timeZone: string): EventDraft {
     endAt: toZonedInputValue(event.endAt, timeZone, event.allDay),
     categoryId: event.categoryId ?? undefined,
     categoryName: event.category?.name,
+    goalId: event.goalId ?? undefined,
+    goalTaskId: event.goalTaskId ?? undefined,
+    goalTitle: event.goal?.title,
+    goalTaskTitle: event.goalTask?.title,
     allDay: event.allDay,
     includeInBalance: event.includeInBalance,
     status: event.status,
@@ -589,7 +641,7 @@ function calendarSourceName(event: ImportableEvent) {
   return "внешнего календаря";
 }
 
-function defaultDraft(timeZone: string): EventDraft {
+function defaultDraft(timeZone: string, goalId?: string, goalTaskId?: string): EventDraft {
   const local = toZonedTime(new Date(), timeZone);
   local.setMinutes(Math.ceil(local.getMinutes() / 30) * 30, 0, 0);
   const start = fromZonedTime(local, timeZone);
@@ -601,6 +653,8 @@ function defaultDraft(timeZone: string): EventDraft {
     includeInBalance: true,
     status: "PLANNED",
     source: "MANUAL",
+    goalId,
+    goalTaskId,
   };
 }
 

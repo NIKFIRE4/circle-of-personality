@@ -5,6 +5,8 @@ export const eventSelect = {
   id: true,
   userId: true,
   categoryId: true,
+  goalId: true,
+  goalTaskId: true,
   calendarConnectionId: true,
   title: true,
   description: true,
@@ -29,6 +31,12 @@ export const eventSelect = {
       icon: true,
     },
   },
+  goal: {
+    select: { id: true, title: true, status: true },
+  },
+  goalTask: {
+    select: { id: true, title: true, kind: true },
+  },
 } satisfies Prisma.EventSelect;
 
 const dateString = z
@@ -48,6 +56,8 @@ export const createEventSchema = z
     description: nullableText(10_000).optional(),
     location: nullableText(500).optional(),
     categoryId: z.string().trim().min(1).max(191).nullable().optional(),
+    goalId: z.string().trim().min(1).max(191).nullable().optional(),
+    goalTaskId: z.string().trim().min(1).max(191).nullable().optional(),
     startAt: dateString,
     endAt: dateString,
     allDay: z.boolean().default(false),
@@ -71,6 +81,9 @@ export const createEventSchema = z
     if (event.source !== "VOICE" && event.voiceCommandId) {
       context.addIssue({ code: "custom", path: ["voiceCommandId"], message: "voiceCommandId is only allowed for voice events" });
     }
+    if (event.goalTaskId && !event.goalId) {
+      context.addIssue({ code: "custom", path: ["goalId"], message: "goalId is required when goalTaskId is set" });
+    }
   });
 
 export const updateEventSchema = z
@@ -79,6 +92,8 @@ export const updateEventSchema = z
     description: nullableText(10_000).optional(),
     location: nullableText(500).optional(),
     categoryId: z.string().trim().min(1).max(191).nullable().optional(),
+    goalId: z.string().trim().min(1).max(191).nullable().optional(),
+    goalTaskId: z.string().trim().min(1).max(191).nullable().optional(),
     startAt: dateString.optional(),
     endAt: dateString.optional(),
     allDay: z.boolean().optional(),
@@ -107,7 +122,7 @@ export const eventsQuerySchema = z
     }
   });
 
-const EXTERNAL_LOCAL_EVENT_FIELDS = new Set(["categoryId", "status", "includeInBalance"]);
+const EXTERNAL_LOCAL_EVENT_FIELDS = new Set(["categoryId", "goalId", "goalTaskId", "status", "includeInBalance"]);
 
 export function unsupportedExternalEventFields(fields: string[]): string[] {
   return fields.filter((field) => !EXTERNAL_LOCAL_EVENT_FIELDS.has(field));

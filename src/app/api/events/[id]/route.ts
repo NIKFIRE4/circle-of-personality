@@ -83,12 +83,47 @@ export async function PATCH(request: Request, context: EventRouteContext) {
         throw new ApiError(422, "INVALID_CATEGORY", "Category does not belong to this user");
       }
     }
+    const nextGoalId = input.goalId === undefined ? existing.goalId : input.goalId;
+    const nextGoalTaskId = input.goalTaskId === undefined
+      ? (input.goalId !== undefined && input.goalId !== existing.goalId ? null : existing.goalTaskId)
+      : input.goalTaskId;
+    let linkedGoal: { id: string; categoryId: string | null } | null = null;
+    if (nextGoalId) {
+      linkedGoal = await prisma.goal.findFirst({
+        where: {
+          id: nextGoalId,
+          userId: user.id,
+          ...(nextGoalId === existing.goalId ? {} : { status: "ACTIVE" }),
+        },
+        select: { id: true, categoryId: true },
+      });
+      if (!linkedGoal) throw new ApiError(422, "INVALID_GOAL", "Цель не найдена или уже не активна");
+    }
+    if (nextGoalTaskId) {
+      if (!nextGoalId) throw new ApiError(422, "INVALID_GOAL_TASK", "Для шага нужно выбрать цель");
+      const ownsTask = await prisma.goalTask.findFirst({
+        where: {
+          id: nextGoalTaskId,
+          userId: user.id,
+          goalId: nextGoalId,
+          ...(nextGoalTaskId === existing.goalTaskId ? {} : { status: "ACTIVE" }),
+        },
+        select: { id: true },
+      });
+      if (!ownsTask) throw new ApiError(422, "INVALID_GOAL_TASK", "Шаг не принадлежит выбранной цели или уже завершён");
+    }
 
     const event = await prisma.$transaction(async (tx) => {
       const updated = await tx.event.update({
         where: { id: existing.id },
         data: {
           ...input,
+          ...(input.goalId !== undefined && input.goalTaskId === undefined && input.goalId !== existing.goalId
+            ? { goalTaskId: null }
+            : {}),
+          ...(input.goalId !== undefined && input.categoryId === undefined && input.goalId !== existing.goalId
+            ? { categoryId: linkedGoal?.categoryId ?? existing.categoryId }
+            : {}),
           ...(input.status === "COMPLETED" && !existing.completedAt
             ? { completedAt: new Date() }
             : {}),

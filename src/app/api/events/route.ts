@@ -79,6 +79,7 @@ export async function POST(request: Request) {
     const user = await requireApiUser();
     const input = await parseJson(request, createEventSchema);
     const metadata = getRequestMetadata(request);
+    let linkedGoal: { id: string; categoryId: string | null } | null = null;
 
     if (input.categoryId) {
       const ownsCategory = await prisma.balanceCategory.findFirst({
@@ -91,11 +92,28 @@ export async function POST(request: Request) {
       }
     }
 
+    if (input.goalId) {
+      linkedGoal = await prisma.goal.findFirst({
+        where: { id: input.goalId, userId: user.id, status: "ACTIVE" },
+        select: { id: true, categoryId: true },
+      });
+      if (!linkedGoal) throw new ApiError(422, "INVALID_GOAL", "Цель не найдена или уже не активна");
+    }
+    if (input.goalTaskId) {
+      const ownsTask = await prisma.goalTask.findFirst({
+        where: { id: input.goalTaskId, userId: user.id, goalId: input.goalId ?? undefined, status: "ACTIVE" },
+        select: { id: true },
+      });
+      if (!ownsTask) throw new ApiError(422, "INVALID_GOAL_TASK", "Шаг не принадлежит выбранной цели или уже завершён");
+    }
+
     const event = await prisma.$transaction(async (tx) => {
       const created = await tx.event.create({
         data: {
           userId: user.id,
-          categoryId: input.categoryId,
+          categoryId: input.categoryId ?? linkedGoal?.categoryId,
+          goalId: input.goalId,
+          goalTaskId: input.goalTaskId,
           title: input.title,
           description: input.description,
           location: input.location,

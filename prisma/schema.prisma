@@ -16,6 +16,7 @@ enum EventStatus {
 enum EventSource {
   MANUAL
   VOICE
+  GOAL
   GOOGLE
   APPLE
 }
@@ -48,6 +49,16 @@ enum GoalStatus {
   ARCHIVED
 }
 
+enum GoalTaskKind {
+  HABIT
+  MILESTONE
+}
+
+enum GoalTaskStatus {
+  ACTIVE
+  COMPLETED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique @db.VarChar(254)
@@ -62,6 +73,7 @@ model User {
   balanceCategories    BalanceCategory[]
   events               Event[]
   goals                Goal[]
+  goalTasks            GoalTask[]
   calendarConnections  CalendarConnection[]
   googleCalendarConfig GoogleCalendarConfig?
   voiceCommands        VoiceCommand[]
@@ -123,15 +135,42 @@ model Goal {
 
   user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   category BalanceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tasks    GoalTask[]
+  events   Event[]
 
   @@index([userId, status, targetDate])
   @@index([categoryId])
+}
+
+model GoalTask {
+  id              String         @id @default(cuid())
+  userId          String
+  goalId          String
+  title           String         @db.VarChar(200)
+  description     String?
+  kind            GoalTaskKind   @default(HABIT)
+  targetPerWeek   Int?
+  durationMinutes Int            @default(30)
+  status          GoalTaskStatus @default(ACTIVE)
+  completedAt     DateTime?
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal   Goal    @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  events Event[]
+
+  @@index([userId, status])
+  @@index([goalId, sortOrder])
 }
 
 model Event {
   id                   String      @id @default(cuid())
   userId               String
   categoryId           String?
+  goalId               String?
+  goalTaskId           String?
   calendarConnectionId String?
   title                String      @db.VarChar(200)
   description          String?
@@ -150,6 +189,8 @@ model Event {
 
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   category           BalanceCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  goal               Goal?               @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  goalTask           GoalTask?           @relation(fields: [goalTaskId], references: [id], onDelete: SetNull)
   calendarConnection CalendarConnection? @relation(fields: [calendarConnectionId], references: [id], onDelete: SetNull)
   voiceCommand       VoiceCommand?
 
@@ -157,6 +198,8 @@ model Event {
   @@index([userId, startAt, endAt])
   @@index([userId, status, startAt])
   @@index([categoryId, startAt])
+  @@index([goalId, startAt])
+  @@index([goalTaskId, status, startAt])
 }
 
 model CalendarConnection {

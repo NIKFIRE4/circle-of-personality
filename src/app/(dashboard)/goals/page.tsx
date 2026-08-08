@@ -1,7 +1,7 @@
 import { GoalsWorkspace } from "@/components/goals/goals-workspace";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { goalSelect, serializeGoal } from "@/lib/goals";
+import { goalSelectForTimeZone, serializeGoal } from "@/lib/goals";
 import { redirect } from "next/navigation";
 
 export default async function GoalsPage() {
@@ -10,7 +10,7 @@ export default async function GoalsPage() {
   const [goals, categories] = await Promise.all([
     prisma.goal.findMany({
       where: { userId: user.id, status: { not: "ARCHIVED" } },
-      select: goalSelect,
+      select: goalSelectForTimeZone(user.timeZone),
       orderBy: [{ status: "asc" }, { targetDate: "asc" }, { createdAt: "desc" }],
     }),
     prisma.balanceCategory.findMany({

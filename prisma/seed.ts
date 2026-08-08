@@ -2,6 +2,7 @@ import { hash } from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 
 import { DEFAULT_BALANCE_CATEGORIES } from "../src/lib/default-categories";
+import { DEFAULT_GOAL_TEMPLATES, targetDateFromHorizon } from "../src/lib/default-goals";
 
 const prisma = new PrismaClient();
 
@@ -20,6 +21,29 @@ async function ensureCategories(userId: string) {
       }),
     ),
   );
+}
+
+async function ensureStarterGoals(userId: string) {
+  if (await prisma.goal.count({ where: { userId } })) return;
+  const categories = await prisma.balanceCategory.findMany({ where: { userId }, select: { id: true, slug: true } });
+  const categoryIds = new Map(categories.map((category) => [category.slug, category.id]));
+  for (const template of DEFAULT_GOAL_TEMPLATES) {
+    const categoryId = categoryIds.get(template.categorySlug);
+    if (!categoryId) continue;
+    await prisma.goal.create({
+      data: {
+        userId,
+        categoryId,
+        title: template.title,
+        description: template.description,
+        unit: "результат",
+        currentValue: 0,
+        targetValue: 1,
+        targetDate: targetDateFromHorizon(template.horizonDays),
+        tasks: { create: template.tasks.map((task, sortOrder) => ({ userId, ...task, sortOrder })) },
+      },
+    });
+  }
 }
 
 async function main() {
@@ -48,6 +72,7 @@ async function main() {
 
   for (const user of users) {
     await ensureCategories(user.id);
+    await ensureStarterGoals(user.id);
   }
 
   if (demoEmail) {

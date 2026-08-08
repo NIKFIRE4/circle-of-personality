@@ -1,7 +1,7 @@
 import { ApiError, assertTrustedMutation, handleRouteError, jsonResponse, parseJson } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { createGoalSchema, goalsQuerySchema, goalSelect, serializeGoal } from "@/lib/goals";
+import { createGoalSchema, goalsQuerySchema, goalSelectForTimeZone, serializeGoal } from "@/lib/goals";
 import { getRequestMetadata } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
             ? {}
             : { status: { not: "ARCHIVED" } }),
       },
-      select: goalSelect,
+      select: goalSelectForTimeZone(user.timeZone),
       orderBy: [{ status: "asc" }, { targetDate: "asc" }, { createdAt: "desc" }],
     });
 
@@ -72,8 +72,21 @@ export async function POST(request: Request) {
           targetValue: input.targetValue,
           targetDate: input.targetDate,
           status: input.status,
+          tasks: {
+            create: input.tasks.map((task, sortOrder) => ({
+              userId: user.id,
+              title: task.title,
+              description: task.description,
+              kind: task.kind,
+              targetPerWeek: task.targetPerWeek,
+              durationMinutes: task.durationMinutes,
+              status: task.status,
+              completedAt: task.status === "COMPLETED" ? new Date() : null,
+              sortOrder,
+            })),
+          },
         },
-        select: goalSelect,
+        select: goalSelectForTimeZone(user.timeZone),
       });
 
       await tx.auditLog.create({
@@ -82,7 +95,7 @@ export async function POST(request: Request) {
           action: "GOAL_CREATED",
           entityType: "Goal",
           entityId: created.id,
-          metadata: { categoryId: created.categoryId, status: created.status },
+          metadata: { categoryId: created.categoryId, status: created.status, taskCount: created.tasks.length },
           ipHash: metadata.ipHash,
           userAgent: metadata.userAgent,
         },

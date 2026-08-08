@@ -6,6 +6,7 @@ import { ApiError, assertTrustedMutation, handleRouteError, jsonResponse, parseJ
 import { createSession, publicUserSelect, setSessionCookie } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DEFAULT_BALANCE_CATEGORIES } from "@/lib/default-categories";
+import { DEFAULT_GOAL_TEMPLATES, targetDateFromHorizon } from "@/lib/default-goals";
 import { getRequestMetadata, isValidTimeZone, normalizeEmail } from "@/lib/security";
 
 export const runtime = "nodejs";
@@ -58,6 +59,35 @@ export async function POST(request: Request) {
         },
         select: publicUserSelect,
       });
+
+      const categories = await tx.balanceCategory.findMany({
+        where: { userId: created.id },
+        select: { id: true, slug: true },
+      });
+      const categoryIds = new Map(categories.map((category) => [category.slug, category.id]));
+      for (const template of DEFAULT_GOAL_TEMPLATES) {
+        const categoryId = categoryIds.get(template.categorySlug);
+        if (!categoryId) continue;
+        await tx.goal.create({
+          data: {
+            userId: created.id,
+            categoryId,
+            title: template.title,
+            description: template.description,
+            unit: "результат",
+            currentValue: 0,
+            targetValue: 1,
+            targetDate: targetDateFromHorizon(template.horizonDays),
+            tasks: {
+              create: template.tasks.map((task, sortOrder) => ({
+                userId: created.id,
+                ...task,
+                sortOrder,
+              })),
+            },
+          },
+        });
+      }
 
       await tx.auditLog.create({
         data: {
