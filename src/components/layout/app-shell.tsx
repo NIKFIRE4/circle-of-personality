@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, CalendarDays, Crosshair, Goal, LogOut, Plus, Settings } from "lucide-react";
+import { ProductTour } from "@/components/onboarding/product-tour";
 import { BrandMark } from "@/components/ui/brand-mark";
 
 import styles from "./app-shell.module.css";
@@ -44,6 +45,7 @@ export function AppShell({ children, user, balanceTotal }: AppShellProps) {
               key={href}
               aria-current={pathname.startsWith(href) ? "page" : undefined}
               className={styles.navItem}
+              data-tour={href.slice(1)}
               href={href}
               title={label}
             >
@@ -76,7 +78,8 @@ export function AppShell({ children, user, balanceTotal }: AppShellProps) {
         <header className={styles.topbar}>
           <div className={styles.breadcrumbs}><span>КОНТУР.КОСТРОВ</span><span>/</span><strong>{current}</strong></div>
           <div className={styles.topbarActions}>
-            <Link href="/calendar?create=1" className={styles.newTaskButton}><Plus size={14} /><span>Новая задача</span></Link>
+            <ProductTour storageId={encodeURIComponent(user.email)} />
+            <Link href="/calendar?create=1" className={styles.newTaskButton} data-tour="create"><Plus size={14} /><span>Новая задача</span></Link>
           </div>
         </header>
         <div className={styles.content} id="dashboard-content" tabIndex={-1}>{children}</div>

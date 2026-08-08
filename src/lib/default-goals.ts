@@ -25,8 +25,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Собрать устойчивый ритм движения без гонки за идеальным планом.",
     horizonDays: 84,
     tasks: [
-      { title: "Силовая тренировка на всё тело", description: "Комфортная нагрузка с постепенным усложнением.", kind: "HABIT", targetPerWeek: 2, durationMinutes: 35 },
-      { title: "Быстрая ходьба, бег или велосипед", description: "Выберите интенсивность, на которой можете сохранять регулярность.", kind: "HABIT", targetPerWeek: 3, durationMinutes: 30 },
+      { title: "Сделать тренировку дома или в зале", description: "Выполнить простую тренировку на основные группы мышц.", kind: "HABIT", targetPerWeek: 2, durationMinutes: 35 },
+      { title: "Погулять быстрым шагом 30 минут", description: "Выйти на прогулку в удобном темпе; при желании заменить её бегом или велосипедом.", kind: "HABIT", targetPerWeek: 3, durationMinutes: 30 },
     ],
   },
   {
@@ -35,8 +35,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "За двенадцать недель создать результат, который можно показать другим.",
     horizonDays: 84,
     tasks: [
-      { title: "Фокус-сессия над главным проектом", description: "Один заранее выбранный результат без почты и мессенджеров.", kind: "HABIT", targetPerWeek: 3, durationMinutes: 50 },
-      { title: "Запросить конкретную обратную связь", description: "У коллеги, руководителя, клиента или наставника.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 30 },
+      { title: "50 минут поработать над важной задачей", description: "Выбрать одну рабочую задачу и на это время закрыть почту и мессенджеры.", kind: "HABIT", targetPerWeek: 3, durationMinutes: 50 },
+      { title: "Попросить обратную связь по своей работе", description: "Показать результат коллеге или руководителю и спросить, что можно улучшить.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 30 },
     ],
   },
   {
@@ -45,8 +45,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Не ждать повода, а регулярно создавать время для настоящего контакта.",
     horizonDays: 56,
     tasks: [
-      { title: "Разговор без параллельных дел", description: "Позвонить или встретиться и внимательно слушать.", kind: "HABIT", targetPerWeek: 2, durationMinutes: 30 },
-      { title: "Совместное время без телефонов", description: "Прогулка, ужин, игра или маленькая поездка.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 90 },
+      { title: "Позвонить близкому человеку и поговорить", description: "Узнать, как у него дела, и спокойно поговорить без параллельных занятий.", kind: "HABIT", targetPerWeek: 2, durationMinutes: 30 },
+      { title: "Сходить в кафе или на прогулку с друзьями", description: "Договориться о встрече и провести время вместе без спешки.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 90 },
     ],
   },
   {
@@ -55,8 +55,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Заменить бесконечное потребление материалов короткими циклами практики и обратной связи.",
     horizonDays: 84,
     tasks: [
-      { title: "Сфокусированная практика навыка", description: "Одна конкретная техника или упражнение за подход.", kind: "HABIT", targetPerWeek: 4, durationMinutes: 25 },
-      { title: "Сделать маленький итоговый проект", description: "Артефакт, по которому видно, чему вы научились.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 120 },
+      { title: "25 минут заниматься выбранным навыком", description: "Например, пройти упражнение по английскому, рисованию или программированию.", kind: "HABIT", targetPerWeek: 4, durationMinutes: 25 },
+      { title: "Сделать небольшую работу с новым навыком", description: "Написать текст, нарисовать иллюстрацию, собрать программу или создать другой понятный результат.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 120 },
     ],
   },
   {
@@ -65,8 +65,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Сначала понять реальную сумму базовых расходов, затем сделать накопление регулярным.",
     horizonDays: 90,
     tasks: [
-      { title: "Еженедельный обзор денег", description: "Проверить траты, обязательные платежи и ближайшие решения.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 25 },
-      { title: "Посчитать месяц обязательных расходов", description: "Зафиксировать ориентир для первого уровня подушки.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 45 },
+      { title: "Записать траты за неделю", description: "Посмотреть историю операций и распределить расходы по основным категориям.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 25 },
+      { title: "Посчитать обязательные расходы за месяц", description: "Сложить жильё, продукты, транспорт, связь, кредиты и другие регулярные платежи.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 45 },
     ],
   },
   {
@@ -75,8 +75,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Поставить отдых в календарь заранее и проверить, какие форматы действительно возвращают энергию.",
     horizonDays: 42,
     tasks: [
-      { title: "Прогулка без ленты и рабочих звонков", description: "Оставить внимание телу и окружающему пространству.", kind: "HABIT", targetPerWeek: 3, durationMinutes: 30 },
-      { title: "Вечер без работы", description: "Заранее выбрать занятие, после которого легче, а не тяжелее.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 120 },
+      { title: "Погулять 30 минут без рабочих звонков", description: "Убрать телефон в карман и пройтись по улице или парку.", kind: "HABIT", targetPerWeek: 3, durationMinutes: 30 },
+      { title: "Провести вечер без работы", description: "Посмотреть фильм, почитать, поиграть, принять ванну или выбрать другой спокойный отдых.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 120 },
     ],
   },
   {
@@ -85,8 +85,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Снизить масштаб настолько, чтобы работу можно было закончить и показать.",
     horizonDays: 56,
     tasks: [
-      { title: "Творческая сессия без оценки результата", description: "Рисовать, писать, снимать, играть или собирать материал.", kind: "HABIT", targetPerWeek: 2, durationMinutes: 45 },
-      { title: "Показать готовую работу одному человеку", description: "Завершение важнее идеальной полировки.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 20 },
+      { title: "45 минут заниматься творчеством", description: "Рисовать, писать, фотографировать, играть на инструменте или собирать материал.", kind: "HABIT", targetPerWeek: 2, durationMinutes: 45 },
+      { title: "Закончить и показать одну работу", description: "Выбрать небольшой результат, завершить его и отправить другу или опубликовать.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 20 },
     ],
   },
   {
@@ -95,8 +95,8 @@ export const DEFAULT_GOAL_TEMPLATES: readonly DefaultGoalTemplate[] = [
     description: "Убрать повторяющееся бытовое трение вместо редкого генерального рывка.",
     horizonDays: 42,
     tasks: [
-      { title: "Короткий еженедельный reset дома", description: "Вернуть вещи на места и подготовить пространство к новой неделе.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 35 },
-      { title: "Устранить одну бытовую помеху", description: "Починить, убрать, организовать или автоматизировать то, что раздражает чаще всего.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 60 },
+      { title: "Сделать уборку по дому", description: "Разложить вещи по местам, протереть пыль, пропылесосить или помыть пол.", kind: "HABIT", targetPerWeek: 1, durationMinutes: 35 },
+      { title: "Разобрать одну полку, ящик или шкаф", description: "Выбросить ненужное и удобно разложить оставшиеся вещи.", kind: "MILESTONE", targetPerWeek: null, durationMinutes: 60 },
     ],
   },
 ];
